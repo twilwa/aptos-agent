@@ -2,7 +2,8 @@
 
 The Aptos blockchain allows developers to interact with Move modules (smart contracts) through various SDKs. This tutorial will help you set up a Python-based Aptos Agent that can interact with the blockchain, similar to how you might use ethers.js or web3.js with Ethereum.
 
-💡 **For Node.js Developers**: Throughout this tutorial, we'll provide analogies to Node.js/JavaScript concepts to help you understand Python's approach.
+> [!NOTE]
+> 💡 **For Node.js Developers**: Throughout this tutorial, we'll provide analogies to Node.js/JavaScript concepts to help you understand Python's approach.
 
 This tutorial is inspired by [Brian Wong's](https://x.com/briannwongg/status/1867716033659965672) Aptos Agent Template ([on Replit](https://replit.com/@brianwww/Aptos-Agent)). You'll learn how to:
 
