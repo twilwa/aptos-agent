@@ -1,5 +1,5 @@
 if __name__ == "__main__":
-    print("Aptos Agent Test Mode")
+    print("Aptos Agent Setup: Test Mode")
     try:
         from agents import aptos_agent
         print(f"Agent name: {aptos_agent['name']}")
