@@ -158,10 +158,6 @@ rest_client = RestClient("https://api.testnet.aptoslabs.com/v1")
 faucet_client = FaucetClient("https://faucet.testnet.aptoslabs.com", rest_client)
 token_client = AptosTokenClient(rest_client)
 
-# Initialize clients for testnet
-rest_client = RestClient("https://api.testnet.aptoslabs.com/v1")
-faucet_client = FaucetClient("https://faucet.testnet.aptoslabs.com", rest_client)
-
 async def fund_wallet(wallet_address, amount):
     """Funds a wallet with test tokens from the faucet."""
     print(f"Funding wallet: {wallet_address} with {amount} APT")
