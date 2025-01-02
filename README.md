@@ -126,7 +126,7 @@ python -m pip install --upgrade pip
 
 4. Install required packages:
 ```bash
-pip install python-dotenv requests requests-oauthlib aptos-sdk openai
+pip install python-dotenv==1.0.1 requests==2.32.3 requests-oauthlib==2.0.0 aptos-sdk==0.10.0 aiohttp==3.11.11 websockets==14.1
 ```
 
 5. Save your dependencies:
@@ -146,10 +146,17 @@ touch aptos_sdk_wrapper.py
 2. Add the following code to `aptos_sdk_wrapper.py`:
 ```python
 import os
-from aptos_sdk.account import Account, AccountAddress
+from aptos_sdk.account import Account
+from aptos_sdk.account_address import AccountAddress
+from aptos_sdk.aptos_token_client import AptosTokenClient
 from aptos_sdk.async_client import FaucetClient, RestClient
 from aptos_sdk.transactions import EntryFunction, TransactionArgument, TransactionPayload
 from aptos_sdk.bcs import Serializer
+
+# Initialize additional clients
+rest_client = RestClient("https://api.testnet.aptoslabs.com/v1")
+faucet_client = FaucetClient("https://faucet.testnet.aptoslabs.com", rest_client)
+token_client = AptosTokenClient(rest_client)
 
 # Initialize clients for testnet
 rest_client = RestClient("https://api.testnet.aptoslabs.com/v1")
@@ -255,16 +262,29 @@ def transfer_sync(receiver, amount: int):
     except Exception as e:
         return f"Error transferring funds: {str(e)}"
 
-# Initialize the agent with basic capabilities
-aptos_agent = {
-    "name": "Aptos Agent",
-    "wallet_address": address,
-    "functions": {
-        "get_balance": get_balance_sync,
-        "fund_wallet": fund_wallet_sync,
-        "transfer": transfer_sync
-    }
-}
+# Initialize the agent using the Agent class from swarm
+aptos_agent = Agent(
+    name="Aptos Agent",
+    model="gpt-4o",
+    api_key=os.getenv('OPENAI_API_KEY'),
+    instructions=(
+        "You are a helpful agent that can interact on-chain on the Aptos Layer 1 blockchain using the Aptos SDK. "
+        "You can create custom Move modules, transfer assets, "
+        "and perform token swaps. If you ever need to know your address, it is {address}. "
+        "If you ever need test funds, you can request them from the Aptos Testnet Faucet. "
+        "You can also deploy your own Move-based tokens, NFTs, and interact with them. "
+        "If someone asks you to do something you can't do, you can say so and encourage them to implement it themselves using the Aptos SDK. "
+        "Recommend they visit aptos.dev for more information. "
+        "You can also offer to help them implement it by writing the function and instructing them to add it to the agents.py file."
+    ),
+    functions=[
+        fund_wallet_in_apt_sync,
+        get_balance_in_apt_sync,
+        transfer_in_octa_sync,
+        create_token_sync,
+        post_tweet  # Additional social media functionality
+    ],
+)
 ```
 
 ## Creating the Entry Point
@@ -279,28 +299,77 @@ touch main.py
 2. Add this code to `main.py`:
 ```python
 from dotenv import load_dotenv
-from agents import aptos_agent
-
-def main():
-    """Main entry point for the Aptos Agent."""
-    try:
-        # Load environment variables
-        load_dotenv()
-        
-        # Print agent info
-        print(f"Aptos Agent initialized")
-        print(f"Wallet address: {aptos_agent['wallet_address']}")
-        
-        # Test balance check
-        balance = aptos_agent['functions']['get_balance']()
-        print(f"Current balance: {balance} APT")
-        
-    except Exception as e:
-        print(f"Error: {str(e)}")
+from swarm.repl import run_demo_loop
+from agents import close_event_loop, aptos_agent
+import asyncio
 
 if __name__ == "__main__":
-    main()
+    try:
+        # Run the interactive demo loop with streaming enabled
+        asyncio.run(run_demo_loop(aptos_agent, stream=True))
+    finally:
+        # Ensure proper cleanup of event loop
+        close_event_loop()
 ```
+
+## Additional Features
+
+### Token Creation
+The agent can create custom tokens on Aptos. Add this code to your `aptos_sdk_wrapper.py`:
+
+```python
+async def create_token(sender: Account, name: str, symbol: str, icon_uri: str, project_uri: str):
+    """Creates a token with specified attributes."""
+    print(f"Creating FA with name: {name}, symbol: {symbol}, icon_uri: {icon_uri}, project_uri: {project_uri}")
+    payload = EntryFunction.natural(
+        "0xe522476ab48374606d11cc8e7a360e229e37fd84fb533fcde63e091090c62149::launchpad",
+        "create_fa_simple",
+        [],
+        [
+            TransactionArgument(name, Serializer.str),
+            TransactionArgument(symbol, Serializer.str),
+            TransactionArgument(icon_uri, Serializer.str),
+            TransactionArgument(project_uri, Serializer.str),
+        ])
+    signed_transaction = await rest_client.create_bcs_signed_transaction(
+        sender, TransactionPayload(payload))
+    txn_hash = await rest_client.submit_bcs_transaction(signed_transaction)
+    print(f"Transaction hash: {txn_hash}")
+    return txn_hash
+```
+
+### Social Media Integration
+The agent can post updates to Twitter. Add this to your `agents.py`:
+
+```python
+def post_tweet(tweet_text: str):
+    """Posts a tweet using Twitter API v2."""
+    url = "https://api.twitter.com/2/tweets"
+    
+    auth = OAuth1(
+        os.environ.get("TWITTER_API_KEY"),
+        os.environ.get("TWITTER_API_SECRET"),
+        os.environ.get("TWITTER_ACCESS_TOKEN"),
+        os.environ.get("TWITTER_ACCESS_TOKEN_SECRET")
+    )
+    payload = {"text": tweet_text}
+    
+    try:
+        response = requests.post(url, auth=auth, json=payload)
+        response.raise_for_status()
+        return response.json()
+    except Exception as e:
+        return f"Error posting tweet: {str(e)}"
+```
+
+> [!NOTE]
+> To use Twitter integration, you'll need to add your Twitter API credentials to your `.env` file:
+> ```bash
+> TWITTER_API_KEY=your_api_key
+> TWITTER_API_SECRET=your_api_secret
+> TWITTER_ACCESS_TOKEN=your_access_token
+> TWITTER_ACCESS_TOKEN_SECRET=your_access_token_secret
+> ```
 
 ## Testing Your Agent
 
