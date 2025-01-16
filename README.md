@@ -368,18 +368,22 @@ User:
 
 - User: Aptos has great docs! Aptos Docs Token plz.
 
-![Screenshot 2025-01-16 at 2 23 03 PM](https://github.com/user-attachments/assets/11318b9b-4afd-4357-a8ab-93d7e60e9a40)
-
 > [!NOTE]  
 > Your agent should respond intelligently to each command, explaining what it's doing and providing blockchain transaction details when relevant. You'll want to check everything deployed correctly using the indexer or explorer. You can exit the conversation with your agent by typing `cmd+z` on Mac.
 
-Let's verify our new token:
-3. Visit the [Aptos Explorer](https://explorer.aptoslabs.com/?network=testnet)
-4. Switch to "Testnet" network if not already selected
-5. Paste your transaction hash
-6. Click the "Payload" tab to see your token details
+![Screenshot 2025-01-16 at 2 23 03 PM](https://github.com/user-attachments/assets/11318b9b-4afd-4357-a8ab-93d7e60e9a40)
 
-![Screenshot 2025-01-16 at 2 03 34 PM (2)](https://github.com/user-attachments/assets/233804e5-dd78-43f2-a639-95100d1157b9)
+Let's verify our new token:
+
+3. Visit the [Aptos Explorer](https://explorer.aptoslabs.com/?network=testnet).
+
+4. Switch to "Testnet" network if not already selected.
+
+5. Paste your transaction hash and select it from the dropdown that loads.
+
+6. Click the "Payload" tab to see your token details.
+
+![Screenshot 2025-01-16 at 2 29 27 PM](https://github.com/user-attachments/assets/4ff96e5f-b0f0-45b2-aba1-f9866db3fb71)
 
 ## What's Next?
 
