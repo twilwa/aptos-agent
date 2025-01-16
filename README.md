@@ -46,7 +46,7 @@ brew install pyenv
 > [!NOTE]  
 > If you don't have Homebrew installed, visit [brew.sh](https://brew.sh) and follow the installation instructions.
 
-5. Add pyenv configuration to your shell (one line at a time):
+5. Add pyenv configuration to your shell:
 ```bash
 echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.zshrc
 echo 'command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.zshrc
@@ -95,7 +95,7 @@ python -m pip install --upgrade pip
    - Visit [platform.openai.com](https://platform.openai.com)
    - Sign up or log in
    - Navigate to "API Keys"
-   - Create a new key (note that API usage has associated costs)
+   - Create a new key (note that API usage has associated costs, but it's under $5)
 
 5. Create an environment file for your API key:
 ```bash
@@ -104,16 +104,28 @@ touch .env
 
 6. Open .env in your preferred editor and add:
 ```
-OPENAI_API_KEY=your-key-here
+OPENAI_API_KEY=<YOUR-KEY-HERE>
 ```
-Save the file.
 
-7. Install required packages:
+7. Replace <YOUR-KEY-HERE> with your OpenAI API key.
+
+> [!NOTE]  
+> Remember to save the file.
+
+8. Install Swarm, OpenAI and other dependencies:
 ```bash
-pip install python-dotenv requests requests-oauthlib aptos-sdk openai
+pip install git+https://github.com/openai/swarm.git openai python-dotenv requests requests-oauthlib aptos-sdk
 ```
 
-8. Save your dependencies:
+> [!NOTE]  
+> Let's understand what each package does:
+> - `swarm`: OpenAI's framework for creating AI agents that can use tools and make decisions
+> - `openai`: Connects to OpenAI's API for the language model
+> - `python-dotenv`: Loads environment variables (like your API keys)
+> - `requests` & `requests-oauthlib`: Handles HTTP requests and OAuth authentication
+> - `aptos-sdk`: Interfaces with the Aptos blockchain
+
+9. Save your dependencies list:
 ```bash
 pip freeze > requirements.txt
 ```
@@ -144,7 +156,8 @@ if __name__ == "__main__":
     finally:
         close_event_loop()
 ```
-Save the file.
+> [!NOTE]  
+> Remember to save the file.
 
 > [!NOTE]  
 > This code creates the interactive environment where you'll talk to your AI agent. It loads your API key, starts the agent, and handles cleanup when you're done.
@@ -228,7 +241,8 @@ aptos_agent = Agent(
     ],
 )
 ```
-Save the file.
+> [!NOTE]  
+> Remember to save the file.
 
 > [!NOTE]  
 > This file defines what your AI agent can do and how it should behave. The functions allow it to interact with the blockchain, while the instructions tell it how to communicate with users.
@@ -305,7 +319,8 @@ async def create_token(sender: Account, name: str, symbol: str, icon_uri: str,
     print(f"Transaction hash: {txn_hash}")
     return txn_hash
 ```
-Save the file.
+> [!NOTE]  
+> Remember to save the file.
 
 > [!NOTE]  
 > This wrapper handles all the low-level blockchain interactions. It converts our simple function calls into proper Aptos transactions.
@@ -345,15 +360,16 @@ Your AI agent can now:
 - Help users interact with the blockchain
 - Create and verify tokens on testnet
 
-Here are some suggested next steps:
-1. Learn more about Move smart contracts at [aptos.dev](https://aptos.dev)
-2. Explore the [Aptos SDK documentation](https://aptos.dev/sdks/python-sdk)
-3. Join the [Aptos Discord](https://discord.gg/aptoslabs) to connect with other developers
+Here are some ideas for next steps:
+1. Learn more about Move smart contracts with the [Your First Move Module Guide at aptos.dev](https://aptos.dev/en/build/guides/first-move-module), perhaps build a custom Move modules to interact with?
+2. Explore the [Aptos SDK documentation](https://aptos.dev/en/build/sdks), perhaps try building an agent in a different language and contribute to this open source project?
+3. Join the [Aptos Discord](https://discord.gg/aptoslabs) to connect with other developers.
+4. Let us know you enjoyed this content, tag us and post your experience and thoughts on social media!
 
-Remember to close your terminal or run `deactivate` when you're done working on the project. The next time you want to work on it, you'll need to:
-1. Open your terminal
-2. Navigate to your project directory
-3. Run `source venv/bin/activate`
-
-> [!IMPORTANT]  
+> [!NOTE] 
+> Remember to close your terminal or run `deactivate` when you're done working on the project. The next time you want to work on it, you'll need to:
+> 1. Open your terminal
+> 2. Navigate to your project directory
+> 3. Run `source venv/bin/activate`
+> 
 > The purpose of activating the virtual environment is to keep your project dependencies isolated. This ensures different projects don't interfere with each other's required packages.
