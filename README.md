@@ -5,7 +5,7 @@ The Aptos blockchain allows developers to interact with Move modules (smart cont
 You'll learn how to:
 1. Set up a Python development environment for blockchain development
 2. Create a virtual environment for project dependency management
-3. Build an AI agent that can interact with the Aptos blockchain
+3. Build an AI agent that can interact with the Aptos blockchain using the Aptos Python SDK
 4. Test your agent with real blockchain interactions
 
 > [!NOTE]  
@@ -80,11 +80,29 @@ A virtual environment keeps your project's dependencies isolated, similar to how
 python -m venv venv
 ```
 
+This command does several things:
+
+- Creates a new folder called `venv`
+- Sets up a fresh Python installation inside it
+- Isolates our project's dependencies from other Python projects
+- You can look inside the `venv` folder, but don't modify anything there
+
+> [!NOTE]
+> This may take a few moments. On Windows, use `python -m venv venv` instead (without the '3').
+
 2. Activate the virtual environment:
 ```bash
 source venv/bin/activate
 ```
 Your prompt should now show `(venv)` or `(aptos-agent)` at the beginning.
+
+> [!NOTE] 
+> Remember, even if you close your terminal, you might need to run `deactivate` when you're done working on the project. The next time you want to work on it, you'll need to:
+> 1. Open your terminal
+> 2. Navigate to your project directory
+> 3. Run `source venv/bin/activate`
+> 
+> The purpose of activating the virtual environment is to keep your project dependencies isolated. This ensures different projects don't interfere with each other's required packages.
 
 3. Upgrade pip (Python's package manager):
 ```bash
@@ -107,7 +125,7 @@ touch .env
 OPENAI_API_KEY=<YOUR-KEY-HERE>
 ```
 
-7. Replace <YOUR-KEY-HERE> with your OpenAI API key.
+7. Replace `<YOUR-KEY-HERE>` with your OpenAI API key.
 
 > [!NOTE]  
 > Remember to save the file.
@@ -340,17 +358,28 @@ Starting Swarm CLI 🐝
 User: 
 ```
 
-2. Try some test commands:
-```
-User: What can you do?
+2. Try some test commands such as:
 
-User: Create a token called "Test Token" with symbol "TEST"
+- User: What can you do?
 
-User: Check my wallet balance
-```
+- User: Create a token called "Test Token" with symbol "TEST"
+
+- User: Check my wallet balance
+
+- User: Aptos has great docs! Aptos Docs Token plz.
 
 > [!NOTE]  
-> Your agent should respond intelligently to each command, explaining what it's doing and providing blockchain transaction details when relevant.
+> Your agent should respond intelligently to each command, explaining what it's doing and providing blockchain transaction details when relevant. You'll want to check everything deployed correctly using the indexer or explorer. You can exit the conversation with your agent by typing `cmd+z` on Mac.
+
+screenshot
+
+Let's verify our new token:
+3. Visit the [Aptos Explorer](https://explorer.aptoslabs.com/?network=testnet)
+4. Switch to "Testnet" network if not already selected
+5. Paste your transaction hash
+6. Click the "Payload" tab to see your token details
+
+screenshot2
 
 ## What's Next?
 
@@ -370,11 +399,3 @@ Here are some ideas for next steps:
 2. Explore the [Aptos SDK documentation](https://aptos.dev/en/build/sdks), perhaps try building an agent in a different language and contribute to this open source project?
 3. Join the [Aptos Discord](https://discord.gg/aptoslabs) to connect with other developers.
 4. Let us know you enjoyed this content, tag us and post your experience and thoughts on social media!
-
-> [!NOTE] 
-> Remember to close your terminal or run `deactivate` when you're done working on the project. The next time you want to work on it, you'll need to:
-> 1. Open your terminal
-> 2. Navigate to your project directory
-> 3. Run `source venv/bin/activate`
-> 
-> The purpose of activating the virtual environment is to keep your project dependencies isolated. This ensures different projects don't interfere with each other's required packages.
