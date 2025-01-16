@@ -88,7 +88,7 @@ This command does several things:
 - You can look inside the `venv` folder, but don't modify anything there
 
 > [!NOTE]
-> This may take a few moments. On Windows, use `python -m venv venv` instead (without the '3').
+> This may take a few moments.
 
 2. Activate the virtual environment:
 ```bash
@@ -368,10 +368,10 @@ User:
 
 - User: Aptos has great docs! Aptos Docs Token plz.
 
+![Screenshot 2025-01-16 at 2 23 03 PM](https://github.com/user-attachments/assets/11318b9b-4afd-4357-a8ab-93d7e60e9a40)
+
 > [!NOTE]  
 > Your agent should respond intelligently to each command, explaining what it's doing and providing blockchain transaction details when relevant. You'll want to check everything deployed correctly using the indexer or explorer. You can exit the conversation with your agent by typing `cmd+z` on Mac.
-
-screenshot
 
 Let's verify our new token:
 3. Visit the [Aptos Explorer](https://explorer.aptoslabs.com/?network=testnet)
@@ -379,7 +379,7 @@ Let's verify our new token:
 5. Paste your transaction hash
 6. Click the "Payload" tab to see your token details
 
-screenshot2
+![Screenshot 2025-01-16 at 2 03 34 PM (2)](https://github.com/user-attachments/assets/233804e5-dd78-43f2-a639-95100d1157b9)
 
 ## What's Next?
 
