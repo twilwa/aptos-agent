@@ -360,6 +360,11 @@ Your AI agent can now:
 - Help users interact with the blockchain
 - Create and verify tokens on testnet
 
+In the next tutorial, we'll improve the agent with:
+- A setup wizard for configuration
+- Optional social media features
+- Better test mode capabilities
+
 Here are some ideas for next steps:
 1. Learn more about Move smart contracts with the [Your First Move Module Guide at aptos.dev](https://aptos.dev/en/build/guides/first-move-module), perhaps build a custom Move modules to interact with?
 2. Explore the [Aptos SDK documentation](https://aptos.dev/en/build/sdks), perhaps try building an agent in a different language and contribute to this open source project?
