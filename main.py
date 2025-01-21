@@ -1,8 +1,11 @@
+from dotenv import load_dotenv
+from swarm.repl import run_demo_loop
+from agents import close_event_loop, aptos_agent
+import asyncio
+
 if __name__ == "__main__":
-    print("Aptos Agent Setup: Test Mode")
     try:
-        from agents import aptos_agent
-        print(f"Agent name: {aptos_agent['name']}")
-        print(f"Test balance: {aptos_agent['get_balance']()}")
-    except Exception as e:
-        print(f"Setup error: {e}")
+        load_dotenv()
+        asyncio.run(run_demo_loop(aptos_agent, stream=True))
+    finally:
+        close_event_loop()
