@@ -5,7 +5,11 @@ import requests
 from dotenv import load_dotenv
 from requests_oauthlib import OAuth1
 from aptos_sdk.account import Account
-from aptos_sdk_wrapper import get_balance, fund_wallet, transfer, create_token
+# from aptos_sdk_wrapper import get_balance, fund_wallet, transfer, create_token
+from aptos_sdk_wrapper import (
+    get_balance, fund_wallet, transfer, create_token,
+    get_transaction, get_account_resources, get_token_balance
+)
 from swarm import Agent
 
 # Load environment variables first!
@@ -46,6 +50,28 @@ def create_token_sync(sender, name: str, symbol: str, icon_uri: str,
     except Exception as e:
         return f"Error creating token: {str(e)}"
 
+def get_transaction_sync(txn_hash: str):
+    """Synchronous wrapper for getting transaction details."""
+    try:
+        return loop.run_until_complete(get_transaction(txn_hash))
+    except Exception as e:
+        return f"Error getting transaction: {str(e)}"
+
+def get_account_resources_sync(address: str):
+    """Synchronous wrapper for getting account resources."""
+    try:
+        return loop.run_until_complete(get_account_resources(address))
+    except Exception as e:
+        return f"Error getting account resources: {str(e)}"
+
+def get_token_balance_sync(address: str, creator_address: str, collection_name: str, token_name: str):
+    """Synchronous wrapper for getting token balance."""
+    try:
+        return loop.run_until_complete(
+            get_token_balance(address, creator_address, collection_name, token_name))
+    except Exception as e:
+        return f"Error getting token balance: {str(e)}"
+
 def close_event_loop():
     loop.close()
 
@@ -66,6 +92,6 @@ aptos_agent = Agent(
     ),
     functions=[
         fund_wallet_in_apt_sync, get_balance_in_apt_sync,
-        transfer_in_octa_sync, create_token_sync
+        transfer_in_octa_sync, create_token_sync, get_transaction_sync, get_account_resources_sync, get_token_balance_sync
     ],
 )

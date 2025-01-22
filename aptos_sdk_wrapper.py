@@ -42,6 +42,41 @@ async def transfer(sender: Account, receiver, amount):
     print(f"Transaction hash: {txn_hash} and receiver: {receiver}")
     return txn_hash
 
+async def get_transaction(txn_hash: str):
+    """Gets details about a specific transaction."""
+    try:
+        result = await rest_client.transaction_by_hash(txn_hash)
+        return result
+    except Exception as e:
+        print(f"Full error: {str(e)}")
+        return f"Error getting transaction: {str(e)}"
+
+async def get_account_resources(address: str):
+    """Gets all resources associated with an account."""
+    try:
+        if isinstance(address, str):
+            address = AccountAddress.from_str(address)
+        return await rest_client.get_account_resources(address)
+    except Exception as e:
+        return f"Error getting account resources: {str(e)}"
+
+async def get_token_balance(address: str, creator_address: str, collection_name: str, token_name: str):
+    """Gets the token balance for a specific token."""
+    try:
+        if isinstance(address, str):
+            address = AccountAddress.from_str(address)
+        resources = await rest_client.get_account_resources(address)
+        for resource in resources:
+            if resource['type'] == '0x3::token::TokenStore':
+                # Parse token data to find specific token balance
+                tokens = resource['data']['tokens']
+                token_id = f"{creator_address}::{collection_name}::{token_name}"
+                if token_id in tokens:
+                    return tokens[token_id]
+        return "Token not found"
+    except Exception as e:
+        return f"Error getting token balance: {str(e)}"
+
 async def create_token(sender: Account, name: str, symbol: str, icon_uri: str,
                        project_uri: str):
     """Creates a token with specified attributes."""
