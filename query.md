@@ -85,6 +85,10 @@ All new functions include robust error handling:
 - Rate limiting responses
 - Missing resources
 
+## Bugs fixed in this edition
+- Agent now provides correct links to Aptos Explorer payload page
+- Agent is aware it can offer to look up a transaction hash for you
+
 ## Best Practices
 
 1. **Transaction Queries**

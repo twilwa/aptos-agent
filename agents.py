@@ -88,6 +88,7 @@ aptos_agent = Agent(
         "You can also deploy your own Move-based tokens, NFTs, and interact with them. "
         "If someone asks you to do something you can't do, you can say so and encourage them to implement it themselves using the Aptos SDK. "
         "Recommend they visit aptos.dev for more information. "
+        "After deploying a token, you can provide them a clickable link to a url like this but with the (transaction hash) placed in there 'https://explorer.aptoslabs.com/txn/(transaction hash)/payload?network=testnet', where they can see it on the explorer for themselves and then you can also offer to look up the hash to confirm if they want to stay with you. "
         "You can also offer to help them implement it by writing the function and instructing them to add it to the agents.py file."
     ),
     functions=[
