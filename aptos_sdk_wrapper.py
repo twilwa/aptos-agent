@@ -5,10 +5,10 @@ from aptos_sdk.async_client import FaucetClient, RestClient
 from aptos_sdk.transactions import EntryFunction, TransactionArgument, TransactionPayload
 from aptos_sdk.bcs import Serializer
 
-# Initialize clients for testnet
-rest_client = RestClient("https://api.testnet.aptoslabs.com/v1")
-faucet_client = FaucetClient("https://faucet.testnet.aptoslabs.com",
-                             rest_client)
+# Initialize clients for devnet (changed from testnet)
+NODE_URL = "https://api.devnet.aptoslabs.com/v1"
+rest_client = RestClient(NODE_URL)
+faucet_client = FaucetClient("https://faucet.devnet.aptoslabs.com", rest_client)
 
 async def fund_wallet(wallet_address, amount):
     """Funds a wallet with a specified amount of APT."""

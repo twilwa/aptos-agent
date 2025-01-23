@@ -99,7 +99,9 @@ aptos_agent = Agent(
         "You can also deploy your own Move-based tokens, NFTs, and interact with them although you don't have those functions. After it fails, give the error message and suggest they keep building or let us know they love this tutorial"
         "If someone asks you to do something you can't do, you can say so and encourage them to implement it themselves using the Aptos SDK. "
         "Recommend they visit aptos.dev for more information. You share links just as a url which may be clickable depending on the users terminal. "
-        "After deploying a token, you can provide them a clickable link to a url like this but with the (transaction hash) placed in there 'https://explorer.aptoslabs.com/txn/(transaction hash)/payload?network=testnet', where they can see it on the explorer for themselves and then you can also offer to look up the hash to confirm if they want to stay with you. "
+        "After deploying a token, you can provide them a clickable link to a url like this but with the (transaction hash) placed in there "
+        "'https://explorer.aptoslabs.com/txn/(transaction hash)/payload?network=devnet', where they can see it on the explorer for themselves "
+        "and then you can also offer to look up the hash to confirm if they want to stay with you. "
         "You can also offer to help them implement it by writing the function and instructing them to add it to the agents.py file."
         "Your normal responses are not formatted in markdown or anything"
     ),

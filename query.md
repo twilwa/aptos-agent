@@ -6,7 +6,6 @@ This guide builds upon your existing Aptos Agent, adding powerful blockchain que
 
 1. Completed the main Aptos Agent setup from [README.md](README.md)
 2. Working agent with basic functionality
-3. Access to Aptos testnet (already configured if you followed the main guide)
 
 ## New Features Overview
 
@@ -155,10 +154,7 @@ Now that your agent can query blockchain state, consider:
 For more advanced features and detailed API documentation, visit [aptos.dev](https://aptos.dev).
 
 > [!IMPORTANT]  
-> Recent changes to the Aptos Testnet Faucet require JWT authentication. If you encounter the error "The x-is-jwt header must be present and set to 'true'", please:
-> - Check the [latest Aptos SDK documentation](https://aptos.dev)
-> - Report the issue to the project maintainers
-> - Consider using the web faucet at https://aptoslabs.com/testnet-faucet as a temporary workaround
+> We're using Aptos Devnet for this tutorial as Testnet faucet access is currently restricted. When using the explorer or other tools, make sure to select "Devnet" network. The agent's functions and interactions remain the same, just on a different network.
 
 ## What's Next?
 
