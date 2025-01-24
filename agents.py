@@ -66,10 +66,11 @@ def get_transaction_sync(txn_hash: str):
     except Exception as e:
         return f"Error getting transaction: {str(e)}"
 
-def get_account_resources_sync(address: str):
-    """Synchronous wrapper for getting account resources."""
+def get_account_resources_sync(address=None):
+    """Get resources for an address or default to agent's address."""
     try:
-        return loop.run_until_complete(get_account_resources(address))
+        target_address = address if address else str(wallet.address())
+        return loop.run_until_complete(get_account_resources(target_address))
     except Exception as e:
         return f"Error getting account resources: {str(e)}"
 

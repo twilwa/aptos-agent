@@ -1,5 +1,6 @@
 print("Aptos SDK wrapper loaded in test mode")
 import os
+import requests
 from aptos_sdk.account import Account, AccountAddress
 from aptos_sdk.async_client import FaucetClient, RestClient
 from aptos_sdk.transactions import EntryFunction, TransactionArgument, TransactionPayload
@@ -51,13 +52,22 @@ async def get_transaction(txn_hash: str):
         print(f"Full error: {str(e)}")
         return f"Error getting transaction: {str(e)}"
 
+import requests
+
 async def get_account_resources(address: str):
-    """Gets all resources associated with an account."""
+    """Gets all resources associated with an account using direct API call."""
+    NODE_URL = "https://api.devnet.aptoslabs.com/v1"  # Update for the correct network
     try:
-        if isinstance(address, str):
-            address = AccountAddress.from_str(address)
-        return await rest_client.get_account_resources(address)
-    except Exception as e:
+        # Use direct API call to fetch resources
+        url = f"{NODE_URL}/accounts/{address}/resources"
+        response = requests.get(url)
+        response.raise_for_status()  # Raise an exception for HTTP errors
+
+        resources = response.json()
+        if not resources:
+            return "No resources found for this account"
+        return resources
+    except requests.exceptions.RequestException as e:
         return f"Error getting account resources: {str(e)}"
 
 async def get_token_balance(address: str, creator_address: str, collection_name: str, token_name: str):
