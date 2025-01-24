@@ -82,6 +82,13 @@ def get_token_balance_sync(address: str, creator_address: str, collection_name: 
     except Exception as e:
         return f"Error getting token balance: {str(e)}"
 
+def execute_view_function_sync(function_id: str, type_args: list, args: list):
+    """Synchronous wrapper for executing a Move view function."""
+    try:
+        return loop.run_until_complete(execute_view_function(function_id, type_args, args))
+    except Exception as e:
+        return f"Error in synchronous view function call: {str(e)}"
+
 def close_event_loop():
     loop.close()
 
@@ -97,6 +104,7 @@ aptos_agent = Agent(
         "Currently you can't perform token swaps. If you ever need to know your address, it is "
         f"{str(wallet.address())}. "
         "If something is wrong with funding your or their account, the user can request them from the Aptos Devnet Faucet or use the Aptos CLI. "
+        "You, as an AI Agent, have the ability to execute view functions on chain if you know what the shape of the function is. "
         "You can also deploy your own Move-based tokens, NFTs, and interact with them although you don't have those functions. After it fails, give the error message and suggest they keep building or let us know they love this tutorial"
         "If someone asks you to do something you can't do, you can say so and encourage them to implement it themselves using the Aptos SDK. "
         "Recommend they visit aptos.dev for more information. You share links just as a url which may be clickable depending on the users terminal. "
@@ -108,6 +116,7 @@ aptos_agent = Agent(
     ),
     functions=[
         fund_wallet_in_apt_sync, get_balance_in_apt_sync,
-        transfer_in_octa_sync, create_token_sync, get_transaction_sync, get_account_resources_sync, get_token_balance_sync
+        transfer_in_octa_sync, create_token_sync, get_transaction_sync, get_account_resources_sync, get_token_balance_sync,
+        execute_view_function_sync
     ],
 )

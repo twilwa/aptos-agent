@@ -11,6 +11,23 @@ NODE_URL = "https://api.devnet.aptoslabs.com/v1"
 rest_client = RestClient(NODE_URL)
 faucet_client = FaucetClient("https://faucet.devnet.aptoslabs.com", rest_client)
 
+async def execute_view_function(function_id: str, type_args: list, args: list):
+    """Executes a Move view function."""
+    url = "https://api.devnet.aptoslabs.com/v1/view"
+    headers = {"Content-Type": "application/json"}
+    body = {
+        "function": function_id,
+        "type_arguments": type_args,
+        "arguments": args
+    }
+
+    try:
+        response = requests.post(url, json=body, headers=headers)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        return f"Error calling view function: {str(e)}"
+
 async def fund_wallet(wallet_address, amount):
     """Funds a wallet with a specified amount of APT."""
     print(f"Funding wallet: {wallet_address} with {amount} APT")
