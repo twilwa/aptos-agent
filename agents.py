@@ -11,6 +11,7 @@ from aptos_sdk_wrapper import (
     get_transaction, get_account_resources, get_token_balance
 )
 from swarm import Agent
+from typing import List
 
 # Load environment variables first!
 load_dotenv()
@@ -82,8 +83,21 @@ def get_token_balance_sync(address: str, creator_address: str, collection_name: 
     except Exception as e:
         return f"Error getting token balance: {str(e)}"
 
-def execute_view_function_sync(function_id: str, type_args: list, args: list):
-    """Synchronous wrapper for executing a Move view function."""
+def execute_view_function_sync(
+    function_id: str,
+    type_args: List[str],  # Specify that this is an array of strings
+    args: List[str]        # Specify that this is an array of strings
+) -> dict:
+    """Synchronous wrapper for executing a Move view function.
+    
+    Args:
+        function_id: The full function ID (e.g. '0x1::coin::balance')
+        type_args: List of type arguments for generic functions
+        args: List of arguments to pass to the function
+    
+    Returns:
+        dict: The result of the view function execution
+    """
     try:
         return loop.run_until_complete(execute_view_function(function_id, type_args, args))
     except Exception as e:
