@@ -5,10 +5,9 @@ import requests
 from dotenv import load_dotenv
 from requests_oauthlib import OAuth1
 from aptos_sdk.account import Account
-# from aptos_sdk_wrapper import get_balance, fund_wallet, transfer, create_token
 from aptos_sdk_wrapper import (
     get_balance, fund_wallet, transfer, create_token,
-    get_transaction, get_account_resources, get_token_balance
+    get_transaction, get_account_resources, get_token_balance, execute_view_function
 )
 from swarm import Agent
 from typing import List
@@ -25,25 +24,28 @@ wallet = Account.load_key(
     "0x63ae44a3e39c934a7ae8064711b8bac0699ece6864f4d4d5292b050ab77b4f6b")
 address = str(wallet.address())
 
+# Load user wallet address from environment
+user_wallet = os.getenv('DEVNET_WALLET_ADDRESS')
+print(f"Loaded user wallet address: {user_wallet}")  # Debugging output
+
 def get_balance_in_apt_sync(address=None):
-    """Get balance for an address or default to agent's address."""
+    """Get balance for an address or default to user's or agent's address."""
     try:
-        # Use the global wallet address if no address is provided
-        target_address = address if address else str(wallet.address())
+        target_address = address if address else user_wallet or str(wallet.address())
         return loop.run_until_complete(get_balance(target_address))
     except Exception as e:
         return f"Error getting balance: {str(e)}"
 
 def fund_wallet_in_apt_sync(amount: int, target_address=None):
-    """Fund a wallet with APT, defaults to agent's wallet."""
+    """Fund a wallet with APT, defaults to user's or agent's wallet."""
     try:
         if amount is None:
             return "Error: Please specify an amount of APT to fund (maximum 1000 APT)"
-        wallet_to_fund = target_address if target_address else str(wallet.address())
+        wallet_to_fund = target_address if target_address else user_wallet or str(wallet.address())
         return loop.run_until_complete(fund_wallet(wallet_to_fund, amount))
     except Exception as e:
         return f"Error funding wallet: {str(e)}"
-
+    
 def transfer_in_octa_sync(receiver, amount: int, sender=None):
     """Transfer APT, defaults to sending from agent's wallet."""
     try:
@@ -113,10 +115,17 @@ aptos_agent = Agent(
     api_key=os.getenv('OPENAI_API_KEY'),
     instructions=(
         "You are a helpful agent that can interact on-chain on the Aptos Layer 1 blockchain using the Aptos Python SDK. "
-        "You can create custom Move modules or teach the user how, and can transfer your assets to the user, "
+        "You can create custom Move modules or teach the user how, and can transfer your assets to the user, you probably have their address, check your variables for user_wallet. "
         "When funding wallets, you must specify an amount in APT (maximum 1000 APT). For example: fund_wallet_in_apt_sync(100). "
+        "After funding a wallet or doing a transaction always report back as much as you can, and be sure to provide a transaction hash beginning with 0x... "
         "Currently you can't perform token swaps. If you ever need to know your address, it is "
         f"{str(wallet.address())}. "
+        "If the user asks for their wallet address, check if 'user_wallet' is set. If it is, provide it by saying: "
+        f"'Your wallet address is {user_wallet}'. "
+        "If 'user_wallet' is not set, inform the user that you don't have access to their wallet address and suggest they provide it. "
+        "When looking up transaction details, you can consult the previous message you sent, perhaps reporting on a status, and ensure you use the correct transaction hash. "
+        "If you mistakenly use a wallet address instead of a transaction hash, apologize and try scanning the conversation for the appropriate transaction hash and see what you used instead. "
+        "If you can't find the transaction hash the user wants, apologize and ask for it. "
         "If something is wrong with funding your or their account, the user can request them from the Aptos Devnet Faucet or use the Aptos CLI. "
         "You, as an AI Agent, have the ability to execute view functions on chain if you know what the shape of the function is. "
         "You can also deploy your own Move-based tokens, NFTs, and interact with them although you don't have those functions. After it fails, give the error message and suggest they keep building or let us know they love this tutorial"
