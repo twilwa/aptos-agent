@@ -7,7 +7,7 @@ from requests_oauthlib import OAuth1
 from aptos_sdk.account import Account
 from aptos_sdk_wrapper import (
     get_balance, fund_wallet, transfer, create_token,
-    get_transaction, get_account_resources, get_token_balance, execute_view_function
+    get_transaction, get_account_resources, get_token_balance, execute_view_function, get_account_modules,
 )
 from swarm import Agent
 from typing import List
@@ -69,6 +69,7 @@ def get_transaction_sync(txn_hash: str):
     except Exception as e:
         return f"Error getting transaction: {str(e)}"
 
+# TODO: modify this function to truncate massive resource JSON return value from accounts with lots of resources
 def get_account_resources_sync(address=None):
     """Get resources for an address or default to agent's address."""
     try:
@@ -76,6 +77,15 @@ def get_account_resources_sync(address=None):
         return loop.run_until_complete(get_account_resources(target_address))
     except Exception as e:
         return f"Error getting account resources: {str(e)}"
+    
+# TODO: double check this works with well with accounts with various amounts of modules
+def get_account_modules_sync(address=None, limit: int = 10):
+    """Get modules for an address or default to agent's address, with optional limit."""
+    try:
+        target_address = address if address else str(wallet.address())
+        return loop.run_until_complete(get_account_modules(target_address, limit))
+    except Exception as e:
+        return f"Error getting account modules: {str(e)}"
 
 def get_token_balance_sync(address: str, creator_address: str, collection_name: str, token_name: str):
     """Synchronous wrapper for getting token balance."""
@@ -127,21 +137,24 @@ aptos_agent = Agent(
         "If you mistakenly use a wallet address instead of a transaction hash, apologize and try scanning the conversation for the appropriate transaction hash and see what you used instead. "
         "If you can't find the transaction hash the user wants, apologize and ask for it. "
         "When looking up account resources, be sure to list out the account address (or note if it's still the same as the authentication key) with all the relevant details, summarize and offer to explain things. "
+        "When looking up account modules, if there are many modules, you will get truncated data. In this case provide a url where they can see all of the modules in that account, the Explorer (NOT A LINK, just the text, NOT MARKDOWN): 'https://explorer.aptoslabs.com/account/(account_address)/modules/code/(name_of_module)?network=devnet'. Just put one of the modules name in there, they can navigate to see the other modules on the left hand side of the screen. "
         "If something is wrong with funding your or their account, the user can request them from the Aptos Devnet Faucet or use the Aptos CLI. "
         "You, as an AI Agent, have the ability to execute view functions on chain if you know what the shape of the function is. "
         "You can also deploy your own Move-based tokens, NFTs, and interact with them although you don't have those functions. After it fails, give the error message and suggest they keep building or let us know they love this tutorial"
-        "If someone asks you to do something you can't do, you can say so and encourage them to implement it themselves using the Aptos SDK. "
+        "If someone asks you to do something you can't do, you can say so and encourage them to implement it themselves using the Aptos SDK. Ask if they want your help writing example functions, etc. "
         "Recommend they visit aptos.dev for more information. You share links just as a url which may be clickable depending on the users terminal. "
         "After deploying a token, you can provide them a plaintext url like this but with the (transaction hash) placed in there "
         "'https://explorer.aptoslabs.com/txn/(transaction_hash)/payload?network=devnet', where they can see it on the explorer for themselves "
         "and then you can also offer to look up the hash to confirm if they want to stay with you. "
         "DO NOT USE BRACKETS FOR LINKS. Counter example: [text](link) is WRONG. The expected result is just link."
         "You can also offer to help them implement it by writing the function and instructing them to add it to the agents.py file."
-        "Your normal responses are not formatted in markdown or anything"
+        "Your normal responses are not formatted in markdown or anything. "
+        "DO NOT USE MARKDOWN BOLD ** OR ITALICS. Counter example:  **Function Name**: check_access is WRONG. The expected result is just Function Name: check_access. "
+
     ),
     functions=[
         fund_wallet_in_apt_sync, get_balance_in_apt_sync,
-        transfer_in_octa_sync, create_token_sync, get_transaction_sync, get_account_resources_sync, get_token_balance_sync,
+        transfer_in_octa_sync, create_token_sync, get_transaction_sync, get_account_resources_sync, get_token_balance_sync, get_account_modules_sync,
         execute_view_function_sync
     ],
 )

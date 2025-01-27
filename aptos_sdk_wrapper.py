@@ -11,6 +11,65 @@ NODE_URL = "https://api.devnet.aptoslabs.com/v1"
 rest_client = RestClient(NODE_URL)
 faucet_client = FaucetClient("https://faucet.devnet.aptoslabs.com", rest_client)
 
+async def get_account_modules(address: str, limit: int = 10):
+    """
+    Fetch the published modules for a specific account,
+    capping the results at 'limit' to avoid large GPT-4 prompts.
+    """
+    import requests
+    
+    # Add '?limit={limit}' for server-side pagination.
+    # Then if the account has more than 'limit' modules, the server might
+    # provide an "X-Aptos-Cursor" header for further pages (if needed).
+    url = f"{NODE_URL}/accounts/{address}/modules?limit={limit}"
+
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        modules = response.json()
+
+        if not modules:
+            return "No modules found for this account"
+
+        # Summarize or truncate large data fields inside each module
+        summarized_modules = []
+        for m in modules:
+            # We might remove or shorten 'bytecode' if it's huge
+            if "bytecode" in m:
+                byte_len = len(m["bytecode"])
+                if byte_len > 300:
+                    m["bytecode"] = (
+                        m["bytecode"][:300]
+                        + f"...(truncated {byte_len-300} chars)"
+                    )
+
+            # Possibly parse 'abi' and only keep minimal info
+            # to prevent huge text from each function signature
+            if "abi" in m:
+                abi = m["abi"]
+                # Example: remove generics if you don't need them
+                if "exposed_functions" in abi:
+                    for fn in abi["exposed_functions"]:
+                        # Remove or shorten params if super large
+                        if "params" in fn and len(fn["params"]) > 5:
+                            fn["params"] = fn["params"][:5] + ["...truncated"]
+            
+            summarized_modules.append(m)
+
+        # If the server truncated results to 'limit' behind the scenes,
+        # you might want to add a note. You can glean if there's more from
+        # the "X-Aptos-Cursor" header, but let's keep it simple:
+        return {
+            "modules": summarized_modules,
+            "note": (
+                f"Requested up to {limit} modules. "
+                "Large fields were truncated to prevent large GPT-4 prompts."
+            )
+        }
+
+    except requests.exceptions.RequestException as e:
+        return f"Error getting account modules: {str(e)}"
+
 async def execute_view_function(function_id: str, type_args: list, args: list):
     """Executes a Move view function."""
     url = "https://api.devnet.aptoslabs.com/v1/view"
