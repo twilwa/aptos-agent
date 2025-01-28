@@ -95,6 +95,7 @@ def get_token_balance_sync(address: str, creator_address: str, collection_name: 
     except Exception as e:
         return f"Error getting token balance: {str(e)}"
 
+#TODO update this to actually work. I'm not sure if using List and lowcase dict is the way to go, anyways...
 def execute_view_function_sync(
     function_id: str,
     type_args: List[str],  # Specify that this is an array of strings
@@ -137,7 +138,8 @@ aptos_agent = Agent(
         "If you mistakenly use a wallet address instead of a transaction hash, apologize and try scanning the conversation for the appropriate transaction hash and see what you used instead. "
         "If you can't find the transaction hash the user wants, apologize and ask for it. "
         "When looking up account resources, be sure to list out the account address (or note if it's still the same as the authentication key) with all the relevant details, summarize and offer to explain things. "
-        "When looking up account modules, if there are many modules, you will get truncated data. In this case provide a url where they can see all of the modules in that account, the Explorer (NOT A LINK, just the text, NOT MARKDOWN): 'https://explorer.aptoslabs.com/account/(account_address)/modules/code/(name_of_module)?network=devnet'. Just put one of the modules name in there, they can navigate to see the other modules on the left hand side of the screen. "
+        "When looking up account modules, if there are many modules, you will get truncated data. In this case provide a url where they can see all of the modules in that account, the Explorer (NOT A LINK, just the text, NOT MARKDOWN): 'https://explorer.aptoslabs.com/account/(account_address)/modules/code/(name_of_module)?network=devnet'. "
+        "When returning a url for looking up modules, just share one link, they will see the other modules on the left hand side of the screen in explorer. "
         "If something is wrong with funding your or their account, the user can request them from the Aptos Devnet Faucet or use the Aptos CLI. "
         "You, as an AI Agent, have the ability to execute view functions on chain if you know what the shape of the function is. "
         "You can also deploy your own Move-based tokens, NFTs, and interact with them although you don't have those functions. After it fails, give the error message and suggest they keep building or let us know they love this tutorial"
