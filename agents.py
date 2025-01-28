@@ -7,7 +7,7 @@ from requests_oauthlib import OAuth1
 from aptos_sdk.account import Account
 from aptos_sdk_wrapper import (
     get_balance, fund_wallet, transfer, create_token,
-    get_transaction, get_account_resources, get_token_balance, execute_view_function, get_account_modules,
+    get_transaction, get_account_resources, get_token_balance, execute_view_function, execute_entry_function, get_account_modules, 
 )
 from swarm import Agent
 from typing import List
@@ -96,25 +96,58 @@ def get_token_balance_sync(address: str, creator_address: str, collection_name: 
         return f"Error getting token balance: {str(e)}"
 
 #TODO update this to actually work. I'm not sure if using List and lowcase dict is the way to go, anyways...
-def execute_view_function_sync(
-    function_id: str,
-    type_args: List[str],  # Specify that this is an array of strings
-    args: List[str]        # Specify that this is an array of strings
-) -> dict:
-    """Synchronous wrapper for executing a Move view function.
-    
+def execute_view_function_sync(function_id: str, type_args: List[str], args: List[str]) -> dict:
+    """
+    Synchronous wrapper for executing a Move view function.
+    Automatically handles empty arguments and provides detailed error feedback.
     Args:
-        function_id: The full function ID (e.g. '0x1::coin::balance')
-        type_args: List of type arguments for generic functions
-        args: List of arguments to pass to the function
-    
+        function_id: The full function ID (e.g., '0x1::coin::balance').
+        type_args: List of type arguments for the function.
+        args: List of arguments to pass to the function.
     Returns:
-        dict: The result of the view function execution
+        dict: The result of the view function execution.
     """
     try:
-        return loop.run_until_complete(execute_view_function(function_id, type_args, args))
+        # Ensure type_args and args are lists (empty if not provided)
+        type_args = type_args or []
+        args = args or []
+
+        # Debugging: Show what’s being sent
+        print(f"Executing view function: {function_id}")
+        print(f"Type arguments: {type_args}")
+        print(f"Arguments: {args}")
+
+        # Call the async function and return the result
+        result = loop.run_until_complete(execute_view_function(function_id, type_args, args))
+        return result
     except Exception as e:
-        return f"Error in synchronous view function call: {str(e)}"
+        # Improved error message
+        return {"error": f"Error executing view function: {str(e)}"}
+
+
+# New function to execute entry functions
+def execute_entry_function_sync(sender: Account, function_id: str, type_args: List[str], args: List[str]) -> dict:
+    """
+    Synchronous wrapper for executing a Move entry function.
+    Args:
+        sender: The account executing the function.
+        function_id: The full function ID (e.g., '0x1::coin::transfer').
+        type_args: List of type arguments for the function.
+        args: List of arguments to pass to the function.
+    Returns:
+        dict: The result of the entry function execution.
+    """
+    try:
+        # Debugging output
+        print(f"Executing entry function: {function_id}")
+        print(f"Type arguments: {type_args}")
+        print(f"Arguments: {args}")
+
+        # Call the async function
+        result = loop.run_until_complete(execute_entry_function(sender, function_id, type_args, args))
+        return result
+    except Exception as e:
+        return {"error": f"Error executing entry function: {str(e)}"}
 
 def close_event_loop():
     loop.close()
@@ -157,6 +190,6 @@ aptos_agent = Agent(
     functions=[
         fund_wallet_in_apt_sync, get_balance_in_apt_sync,
         transfer_in_octa_sync, create_token_sync, get_transaction_sync, get_account_resources_sync, get_token_balance_sync, get_account_modules_sync,
-        execute_view_function_sync
+        execute_view_function_sync, execute_entry_function_sync
     ],
 )

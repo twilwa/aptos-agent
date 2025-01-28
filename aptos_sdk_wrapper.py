@@ -71,13 +71,21 @@ async def get_account_modules(address: str, limit: int = 10):
         return f"Error getting account modules: {str(e)}"
 
 async def execute_view_function(function_id: str, type_args: list, args: list):
-    """Executes a Move view function."""
-    url = "https://api.devnet.aptoslabs.com/v1/view"
+    """
+    Executes a Move view function asynchronously.
+    Args:
+        function_id: The full function ID (e.g., '0x1::coin::balance').
+        type_args: A list of type arguments for the function.
+        args: A list of arguments to pass to the function.
+    Returns:
+        The result of the view function execution.
+    """
+    url = f"{NODE_URL}/view"
     headers = {"Content-Type": "application/json"}
     body = {
         "function": function_id,
         "type_arguments": type_args,
-        "arguments": args
+        "arguments": args,
     }
 
     try:
@@ -85,7 +93,7 @@ async def execute_view_function(function_id: str, type_args: list, args: list):
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
-        return f"Error calling view function: {str(e)}"
+        return {"error": f"Error executing view function: {str(e)}"}
 
 async def fund_wallet(wallet_address, amount):
     """Funds a wallet with a specified amount of APT."""
@@ -184,3 +192,46 @@ async def create_token(sender: Account, name: str, symbol: str, icon_uri: str,
     txn_hash = await rest_client.submit_bcs_transaction(signed_transaction)
     print(f"Transaction hash: {txn_hash}")
     return txn_hash
+
+async def execute_entry_function(sender: Account, function_id: str, type_args: list, args: list):
+    """
+    Executes a Move entry function asynchronously.
+    Args:
+        sender: The account executing the function.
+        function_id: The full function ID (e.g., '0x1::coin::transfer').
+        type_args: A list of type arguments for the function.
+        args: A list of arguments to pass to the function.
+    Returns:
+        The transaction hash of the submitted entry function.
+    """
+    try:
+        from aptos_sdk.transactions import EntryFunction, TransactionArgument
+        from aptos_sdk.bcs import Serializer
+
+        # Parse module and function names
+        module, function = function_id.rsplit("::", 1)
+        module_address, module_name = module.split("::", 1)
+
+        # Serialize arguments
+        serialized_args = []
+        for arg in args:
+            if arg.isdigit():
+                serialized_args.append(TransactionArgument(int(arg), Serializer.u64))
+            else:
+                serialized_args.append(TransactionArgument(arg, Serializer.str))
+
+        # Create payload
+        payload = EntryFunction.natural(
+            module=f"{module_address}::{module_name}",
+            function=function,
+            type_arguments=type_args,
+            arguments=serialized_args,
+        )
+
+        # Submit transaction
+        txn_hash = await rest_client.submit_bcs_transaction(
+            rest_client.create_bcs_signed_transaction(sender, payload)
+        )
+        return {"txn_hash": txn_hash}
+    except Exception as e:
+        return {"error": f"Error executing entry function: {str(e)}"}
