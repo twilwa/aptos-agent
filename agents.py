@@ -78,12 +78,20 @@ def get_account_resources_sync(address=None):
     except Exception as e:
         return f"Error getting account resources: {str(e)}"
     
+# Global dictionary to store ABI results for each wallet
+ABI_CACHE = {}
+
 # TODO: double check this works with well with accounts with various amounts of modules
 def get_account_modules_sync(address=None, limit: int = 10):
     """Get modules for an address or default to agent's address, with optional limit."""
     try:
         target_address = address if address else str(wallet.address())
-        return loop.run_until_complete(get_account_modules(target_address, limit))
+        abi_result = loop.run_until_complete(get_account_modules(target_address, limit))
+
+        # ✅ Store the ABI result in cache
+        ABI_CACHE[target_address] = abi_result.get("modules", [])
+
+        return abi_result
     except Exception as e:
         return f"Error getting account modules: {str(e)}"
 
@@ -95,7 +103,6 @@ def get_token_balance_sync(address: str, creator_address: str, collection_name: 
     except Exception as e:
         return f"Error getting token balance: {str(e)}"
 
-#TODO update this to actually work. I'm not sure if using List and lowcase dict is the way to go, anyways...
 def execute_view_function_sync(function_id: str, type_args: List[str], args: List[str]) -> dict:
     """
     Synchronous wrapper for executing a Move view function.
@@ -126,25 +133,27 @@ def execute_view_function_sync(function_id: str, type_args: List[str], args: Lis
 
 
 # New function to execute entry functions
-def execute_entry_function_sync(sender: Account, function_id: str, type_args: List[str], args: List[str]) -> dict:
+def execute_entry_function_sync(function_id: str, type_args: List[str], args: List[str]) -> dict:
     """
-    Synchronous wrapper for executing a Move entry function.
+    Executes a Move entry function synchronously, using cached ABI when possible.
+
     Args:
-        sender: The account executing the function.
         function_id: The full function ID (e.g., '0x1::coin::transfer').
-        type_args: List of type arguments for the function.
-        args: List of arguments to pass to the function.
+        type_args: A list of type arguments for the function (if any).
+        args: A list of arguments to pass to the function.
+
     Returns:
-        dict: The result of the entry function execution.
+        dict: The transaction hash if successful, otherwise an error message.
     """
     try:
-        # Debugging output
-        print(f"Executing entry function: {function_id}")
-        print(f"Type arguments: {type_args}")
-        print(f"Arguments: {args}")
+        # ✅ Retrieve ABI from cache if available
+        module_address, _ = function_id.split("::", 1) # module address
+        abi_cache = ABI_CACHE.get(module_address, [])
 
-        # Call the async function
-        result = loop.run_until_complete(execute_entry_function(sender, function_id, type_args, args))
+        # ✅ Pass cached ABI to avoid unnecessary API calls
+        result = loop.run_until_complete(
+            execute_entry_function(wallet, function_id, type_args, args, abi_cache=abi_cache, optional_fetch_abi=False)
+        )
         return result
     except Exception as e:
         return {"error": f"Error executing entry function: {str(e)}"}
@@ -171,8 +180,9 @@ aptos_agent = Agent(
         "If you mistakenly use a wallet address instead of a transaction hash, apologize and try scanning the conversation for the appropriate transaction hash and see what you used instead. "
         "If you can't find the transaction hash the user wants, apologize and ask for it. "
         "When looking up account resources, be sure to list out the account address (or note if it's still the same as the authentication key) with all the relevant details, summarize and offer to explain things. "
-        "When looking up account modules, if there are many modules, you will get truncated data. In this case provide a url where they can see all of the modules in that account, the Explorer (NOT A LINK, just the text, NOT MARKDOWN): 'https://explorer.aptoslabs.com/account/(account_address)/modules/code/(name_of_module)?network=devnet'. "
-        "When returning a url for looking up modules, just share one link, they will see the other modules on the left hand side of the screen in explorer. "
+        "When looking up account modules, if there are many modules, you may get truncated data. Let the user know. "
+        "Provide only 1 (ONE) non-markdown url where they can see all of the modules in that account using the Explorer (NOT A LINK, just the text, NOT MARKDOWN): 'https://explorer.aptoslabs.com/account/(account_address)/modules/code/(name_of_a_module)?network=devnet'. "
+        "When returning a url for looking up modules, just share one link, they will see the other modules on the left hand side of the screen in Explorer, so just need one url. "
         "If something is wrong with funding your or their account, the user can request them from the Aptos Devnet Faucet or use the Aptos CLI. "
         "You, as an AI Agent, have the ability to execute view functions on chain if you know what the shape of the function is. "
         "You can also deploy your own Move-based tokens, NFTs, and interact with them although you don't have those functions. After it fails, give the error message and suggest they keep building or let us know they love this tutorial"
