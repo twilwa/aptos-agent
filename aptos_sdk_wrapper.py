@@ -218,6 +218,8 @@ async def execute_entry_function(
         module_path, function_name = function_id.rsplit("::", 1)
         module_address, module_name = module_path.split("::", 1)
 
+        if not type_args:
+            type_args = []
         # ✅ Step 1: Check if ABI is available in cache
         function_abi = None
         if abi_cache:
@@ -263,6 +265,7 @@ async def execute_entry_function(
         # ✅ Step 4: Extract required parameters from ABI
         expected_params = function_abi.get("params", [])
         print(f"Expected Parameters: {expected_params}")
+        print(f"Args!: {args}")
 
         # Ensure the signer (`&signer`) is NOT passed in `args`
         if expected_params and expected_params[0] == "&signer":
@@ -270,12 +273,15 @@ async def execute_entry_function(
             print("Automatically handling signer argument")
 
         # ✅ Step 5: Validate the number of arguments
-        if len(args) != len(expected_params):
-            return {"error": f"Argument mismatch: expected {len(expected_params)}, got {len(args)}"}
+        # if len(args) != len(expected_params):
+        #     return {"error": f"Argument mismatch: expected {len(expected_params)}, got {len(args)}"}
 
         # ✅ Step 6: Serialize arguments correctly based on ABI types
         serialized_args = []
         for i, arg in enumerate(args):
+            # don't go above the expected parameters
+            if i >= len(expected_params):
+                break
             param_type = expected_params[i]
 
             if param_type == "u64":
@@ -301,7 +307,8 @@ async def execute_entry_function(
 
         # ✅ Step 7: Execute the function with the dynamically determined shape
         payload = EntryFunction.natural(
-            function_id,  # Full function ID
+            module_path,
+            function_name,
             type_args,  # Correctly determined type arguments
             serialized_args,  # Correctly formatted function parameters
         )

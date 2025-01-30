@@ -74,6 +74,7 @@ def get_account_resources_sync(address=None):
     """Get resources for an address or default to agent's address."""
     try:
         target_address = address if address else str(wallet.address())
+        print(f"target_address: {target_address}")
         return loop.run_until_complete(get_account_resources(target_address))
     except Exception as e:
         return f"Error getting account resources: {str(e)}"
@@ -86,6 +87,7 @@ def get_account_modules_sync(address=None, limit: int = 10):
     """Get modules for an address or default to agent's address, with optional limit."""
     try:
         target_address = address if address else str(wallet.address())
+        print(f"target_address: {target_address}")
         abi_result = loop.run_until_complete(get_account_modules(target_address, limit))
 
         # ✅ Store the ABI result in cache
@@ -167,7 +169,7 @@ aptos_agent = Agent(
     model="gpt-4",
     api_key=os.getenv('OPENAI_API_KEY'),
     instructions=(
-        "You are a helpful agent that can interact on-chain on the Aptos Layer 1 blockchain using the Aptos Python SDK. "
+        f"You are a helpful agent that can interact on-chain on the Aptos Layer 1 blockchain using the Aptos Python SDK. The dev may speak to you in first person: for example 'look up my address modules', you should use {user_wallet}. "
         "You can create custom Move modules or teach the user how, and can transfer your assets to the user, you probably have their address, check your variables for user_wallet. "
         "When funding wallets, you must specify an amount in APT (maximum 1000 APT). For example: fund_wallet_in_apt_sync(100). "
         "After funding a wallet or doing a transaction always report back as much as you can, and be sure to provide a transaction hash beginning with 0x... "
