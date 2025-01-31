@@ -24,4 +24,11 @@ module access::simple_storage {
             0
         }
     }
+
+    /// This is guaranteed to be recognized as a view function 
+    /// because it doesn't read or write any global resources
+    #[view]
+    public fun get_meaning_of_view(): u64 {
+        42
+    }
 }
