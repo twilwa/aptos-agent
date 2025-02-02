@@ -36,7 +36,6 @@ cd aptos-agent
 ```bash
 python3 --version
 ```
-Any result (or even an error) is fine - we'll set up the right version next.
 
 4. Install `pyenv` using Homebrew:
 ```bash
@@ -92,7 +91,9 @@ This command does several things:
 
 2. Activate the virtual environment:
 ```bash
-source venv/bin/activate
+source venv/bin/activate  # On macOS/Linux
+# or
+.\venv\Scripts\activate  # On Windows
 ```
 Your prompt should now show `(venv)` or `(aptos-agent)` at the beginning.
 
