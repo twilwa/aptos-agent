@@ -85,15 +85,15 @@ To create an AI Agent, you will need an API key for the AI. This agent was writt
 >
 > It may take a few minutes for this API key to work after funding.
 
-## Part 1: Setting Up Your Development Environment
+## Part 1: Getting Ready To Run Your Aptos Agent
 
-Before we write any code, we need to set up our Python environment. Think of this like setting up Node.js and npm for a JavaScript project.
+Before we write any code, we need to set up our development environment. That means downloading the code, choosing the right version of Python, and installing our dependencies.
 
-1. Open your terminal
+1. Open your terminal.
 
 2. Create your project directory:
 ```bash
-mkdir aptos-agent
+git clone https://github.com/tippi-fifestarr/aptos-agent-local.git aptos-agent
 cd aptos-agent
 ```
 
@@ -106,7 +106,9 @@ python3 --version
 > We will need python version 3.10 or higher to work with the AI Agent library `swarm`.
 > `pyenv` will help us choose which version of python we are using.
 
-4. Install `pyenv` using Homebrew:
+4. Ensure you have `pyenv` installed by running `pyenv --version`.
+
+If you do not have `pyenv` installed, you can download it using Homebrew:
 ```bash
 brew install pyenv
 ```
@@ -171,16 +173,26 @@ Your prompt should now show `(venv)` or `(aptos-agent)` at the beginning.
 > 1. Navigating to your project directory
 > 2. Running `source venv/bin/activate`
 
-3. Upgrade pip (Python's package manager):
+11. Upgrade pip (Python's package manager):
 ```bash
 python -m pip install --upgrade pip
 ```
 
-4. Let's get your OpenAI API key set up:
-   - Visit [platform.openai.com](https://platform.openai.com)
-   - Sign up or log in
-   - Navigate to "API Keys"
-   - Create a new key (note that API usage has associated costs, but it's under $5)
+12. Install Swarm, OpenAI and all our other dependencies by running:
+
+`pip install -r requirements.txt`
+
+> [!NOTE]  
+> Let's understand what each package does:
+> - `swarm`: OpenAI's framework for creating AI agents that can use tools and make decisions
+> - `openai`: Connects to OpenAI's API for the language model
+> - `python-dotenv`: Loads environment variables (like your API keys)
+> - `requests` & `requests-oauthlib`: Handles HTTP requests and OAuth authentication
+> - `aptos-sdk`: Interfaces with the Aptos blockchain
+
+## Part 2: Running Your AI Agent
+
+Now that our environment is set up, we'll create the files that will power our AI agent. Each file has a specific purpose in making our blockchain assistant work.
 
 5. Create an environment file for your API key:
 ```bash
@@ -196,31 +208,6 @@ OPENAI_API_KEY=<YOUR-KEY-HERE>
 
 > [!NOTE]  
 > Remember to save the file.
-
-8. Install Swarm, OpenAI and other dependencies:
-```bash
-pip install git+https://github.com/openai/swarm.git openai python-dotenv requests requests-oauthlib aptos-sdk
-```
-
-> [!NOTE]  
-> Let's understand what each package does:
-> - `swarm`: OpenAI's framework for creating AI agents that can use tools and make decisions
-> - `openai`: Connects to OpenAI's API for the language model
-> - `python-dotenv`: Loads environment variables (like your API keys)
-> - `requests` & `requests-oauthlib`: Handles HTTP requests and OAuth authentication
-> - `aptos-sdk`: Interfaces with the Aptos blockchain
-
-9. Save your dependencies list:
-```bash
-pip freeze > requirements.txt
-```
-
-> [!NOTE]  
-> Think of `requirements.txt` like `package.json` + `package-lock.json` combined. It lists your project's dependencies with exact versions.
-
-## Part 3: Building Your AI Agent
-
-Now that our environment is set up, we'll create the files that will power our AI agent. Each file has a specific purpose in making our blockchain assistant work.
 
 1. Create the main entry file:
 ```bash
