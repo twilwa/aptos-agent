@@ -20,18 +20,16 @@ loop = asyncio.new_event_loop()
 asyncio.set_event_loop(loop)
 
 # Initialize test wallet
-wallet = Account.load_key(
-    "0x63ae44a3e39c934a7ae8064711b8bac0699ece6864f4d4d5292b050ab77b4f6b")
+wallet = Account.generate() # TODO: You can update this with your account if you want an agent with a specific address on-chain using Account.load_key('...')
 address = str(wallet.address())
 
-# Load user wallet address from environment
-user_wallet = os.getenv('DEVNET_WALLET_ADDRESS')
-print(f"Loaded user wallet address: {user_wallet}")  # Debugging output
+def get_user_wallet():
+    return os.getenv('DEVNET_WALLET_ADDRESS')
 
 def get_balance_in_apt_sync(address=None):
     """Get balance for an address or default to user's or agent's address."""
     try:
-        target_address = address if address else user_wallet or str(wallet.address())
+        target_address = address if address else get_user_wallet() or str(wallet.address())
         return loop.run_until_complete(get_balance(target_address))
     except Exception as e:
         return f"Error getting balance: {str(e)}"
@@ -41,7 +39,7 @@ def fund_wallet_in_apt_sync(amount: int, target_address=None):
     try:
         if amount is None:
             return "Error: Please specify an amount of APT to fund (maximum 1000 APT)"
-        wallet_to_fund = target_address if target_address else user_wallet or str(wallet.address())
+        wallet_to_fund = target_address if target_address else get_user_wallet() or str(wallet.address())
         return loop.run_until_complete(fund_wallet(wallet_to_fund, amount))
     except Exception as e:
         return f"Error funding wallet: {str(e)}"
@@ -169,14 +167,14 @@ aptos_agent = Agent(
     model="gpt-4",
     api_key=os.getenv('OPENAI_API_KEY'),
     instructions=(
-        f"You are a helpful agent that can interact on-chain on the Aptos Layer 1 blockchain using the Aptos Python SDK. The dev may speak to you in first person: for example 'look up my address modules', you should use {user_wallet}. "
+        f"You are a helpful agent that can interact on-chain on the Aptos Layer 1 blockchain using the Aptos Python SDK. The dev may speak to you in first person: for example 'look up my address modules', you should use {get_user_wallet()}. "
         "You can create custom Move modules or teach the user how, and can transfer your assets to the user, you probably have their address, check your variables for user_wallet. "
         "When funding wallets, you must specify an amount in APT (maximum 1000 APT). For example: fund_wallet_in_apt_sync(100). "
         "After funding a wallet or doing a transaction always report back as much as you can, and be sure to provide a transaction hash beginning with 0x... "
         "Currently you can't perform token swaps. If you ever need to know your address, it is "
         f"{str(wallet.address())}. "
         "If the user asks for their wallet address, check if 'user_wallet' is set. If it is, provide it by saying: "
-        f"'Your wallet address is {user_wallet}'. "
+        f"'Your wallet address is {get_user_wallet()}'. "
         "If 'user_wallet' is not set, inform the user that you don't have access to their wallet address and suggest they provide it. "
         "When looking up transaction details, you can consult the previous message you sent, perhaps reporting on a status, and ensure you use the correct transaction hash. "
         "If you mistakenly use a wallet address instead of a transaction hash, apologize and try scanning the conversation for the appropriate transaction hash and see what you used instead. "
@@ -202,6 +200,6 @@ aptos_agent = Agent(
     functions=[
         fund_wallet_in_apt_sync, get_balance_in_apt_sync,
         transfer_in_octa_sync, create_token_sync, get_transaction_sync, get_account_resources_sync, get_token_balance_sync, get_account_modules_sync,
-        execute_view_function_sync, execute_entry_function_sync
+        execute_view_function_sync, execute_entry_function_sync, get_user_wallet
     ],
 )
