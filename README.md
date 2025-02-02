@@ -102,6 +102,10 @@ cd aptos-agent
 python3 --version
 ```
 
+> [!NOTE]
+> We will need python version 3.10 or higher to work with the AI Agent library `swarm`.
+> `pyenv` will help us choose which version of python we are using.
+
 4. Install `pyenv` using Homebrew:
 ```bash
 brew install pyenv
