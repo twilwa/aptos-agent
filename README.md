@@ -13,12 +13,77 @@ You'll learn how to:
 
 Imagine our Aptos Agent as a new employee at a bank. They need two things to do their job: knowledge of banking procedures (that's our AI's instructions) and access to the actual banking systems (that's our blockchain integration). We'll set up both components step by step.
 
-## Prerequisites
+> [!NOTE]  
+> This tutorial is written for Mac / Linux, so Windows users will need to modify some commands.
+>
+> Asking [ChatGPT](chat.openai.com) for the Windows version can be a quick way to get the right command!
 
-1. Basic understanding of terminal/command line usage
-2. Familiarity with Python (helpful but not required)
-3. Mac or Linux environment (Windows users will need to modify some commands)
-4. OpenAI API key (we'll help you get this)
+## Part 0: Getting Your OpenAI API Key
+To create an AI Agent, you will need an API key for the AI. This agent was written to work with ChatGPT 4o, so before we dive into the details of how to run the agent’s code, you will need to create an OpenAI account. 
+
+> [!NOTE]  
+> This will require loading at least $5 into your account, but the actual tutorial should cost only a couple pennies to interact with your AI Agent!
+
+**If you already have an OpenAI account:**
+
+1. Go to https://platform.openai.com/api-keys.
+2. Login.
+3. Copy your API key for later (we will use it in the .env file).
+4. Ensure that your account has funds.
+5. Skip to **Part 1** below!
+
+**Otherwise, if you do NOT have an OpenAI account:** follow the below instructions to “Get an API Key From Scratch”!
+
+### Get a Funded API Key From Scratch
+
+1. Go to [platform.openai.com](https://platform.openai.com/).
+2. Click “Start Building” in the top right corner.
+
+   <img width="281" alt="Step2" src="https://github.com/user-attachments/assets/20b8d877-1c74-4d19-a935-1f348121237b" />
+    
+3. Name your organization.
+
+<img width="387" alt="Step3" src="https://github.com/user-attachments/assets/5fc083ac-3649-4458-8861-3de4ef4c93d3" />
+
+4. Click “I’ll invite my team later”
+   
+<img width="387" alt="Step4" src="https://github.com/user-attachments/assets/50ba66d8-7f1c-48c9-8132-04c82752754f" />
+
+5. Name your API key and project (see below for an example):
+
+<img width="387" alt="Step5" src="https://github.com/user-attachments/assets/66d24fde-d4d7-4b85-8f33-014b990ecaca" />
+
+6. Click “Copy” on your newly generated API key.
+   
+<img width="521" alt="Step6" src="https://github.com/user-attachments/assets/1ce14a6b-f631-4a5d-a775-baeb8bb6b09b" />
+
+7. Paste this into a text file for later (We will eventually move this into the .env file for this project)
+8. Click “Continue”
+
+<img width="378" alt="Step8" src="https://github.com/user-attachments/assets/a400213b-a58a-44ca-a9d0-d1f06fdfd53a" />
+
+9. Add at least $5 dollars in credit (this tutorial should only cost pennies!)
+
+<img width="378" alt="Step9" src="https://github.com/user-attachments/assets/612b29db-dff1-41a5-9bb3-a13960e08375" />
+
+10. Click “Purchase Credits”.
+    
+<img width="370" alt="Step10" src="https://github.com/user-attachments/assets/94c5e5d8-b024-4d44-9533-8f10326e5976" />
+    
+11. Add a payment method.
+
+<img width="499" alt="Step11" src="https://github.com/user-attachments/assets/8ca807de-f8d5-4d06-8722-ddb7e89adaf2" />
+
+12. Click “Add payment method” in the bottom right corner.
+
+<img width="171" alt="Step12" src="https://github.com/user-attachments/assets/2c753532-468a-4e00-b3bc-26d3411c818a" />
+
+13. Use the payment method to purchase the $5 of credits.
+
+> [!NOTE]  
+> You should now have a funded API key that you've stored in a text file (temporarily).
+>
+> It may take a few minutes for this API key to work after funding.
 
 ## Part 1: Setting Up Your Development Environment
 
