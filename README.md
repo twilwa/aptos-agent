@@ -98,12 +98,11 @@ source venv/bin/activate  # On macOS/Linux
 Your prompt should now show `(venv)` or `(aptos-agent)` at the beginning.
 
 > [!NOTE] 
-> Remember, even if you close your terminal, you might need to run `deactivate` when you're done working on the project. The next time you want to work on it, you'll need to:
-> 1. Open your terminal
-> 2. Navigate to your project directory
-> 3. Run `source venv/bin/activate`
-> 
 > The purpose of activating the virtual environment is to keep your project dependencies isolated. This ensures different projects don't interfere with each other's required packages.
+>
+> The next time you open a terminal, you'll need to activate your virtual environment again by:
+> 1. Navigating to your project directory
+> 2. Running `source venv/bin/activate`
 
 3. Upgrade pip (Python's package manager):
 ```bash
