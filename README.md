@@ -145,30 +145,22 @@ pyenv local 3.11
 > [!NOTE]  
 > Using `pyenv` to pick a specific version of `python` requires us to use `python` instead of `python3` for commands going forward.
 
-## Part 2: Virtual Environment and Dependencies
-
-A virtual environment keeps your project's dependencies isolated, similar to how each Node.js project has its own `node_modules` folder.
-
-1. Create a virtual environment:
+9. Create a virtual environment:
 ```bash
 python -m venv venv
 ```
+
+A virtual environment keeps your project's dependencies isolated, similar to how each Node.js project has its own `node_modules` folder.
 
 This command does several things:
 
 - Creates a new folder called `venv`
 - Sets up a fresh Python installation inside it
 - Isolates our project's dependencies from other Python projects
-- You can look inside the `venv` folder, but don't modify anything there
 
-> [!NOTE]
-> This may take a few moments.
-
-2. Activate the virtual environment:
+10. Activate the virtual environment:
 ```bash
-source venv/bin/activate  # On macOS/Linux
-# or
-.\venv\Scripts\activate  # On Windows
+source venv/bin/activate
 ```
 Your prompt should now show `(venv)` or `(aptos-agent)` at the beginning.
 
