@@ -97,7 +97,22 @@ git clone https://github.com/tippi-fifestarr/aptos-agent-local.git aptos-agent
 cd aptos-agent
 ```
 
-3. Check if you have Python installed:
+3. Copy `.env-example` into a new file named `.env` by running:
+```bash
+cp .env-example .env
+```
+
+4. Edit `.env` and add your Open API key in quotes:
+
+It should look something like:
+```
+OPENAI_API_KEY='sk-proj-ABcdeafefa...'
+```
+
+> [!NOTE]
+> Remember to save!
+   
+5. Check if you have Python installed:
 ```bash
 python3 --version
 ```
@@ -106,7 +121,7 @@ python3 --version
 > We will need python version 3.10 or higher to work with the AI Agent library `swarm`.
 > `pyenv` will help us choose which version of python we are using.
 
-4. Ensure you have `pyenv` installed by running `pyenv --version`.
+6. Ensure you have `pyenv` installed by running `pyenv --version`.
 
 If you do not have `pyenv` installed, you can download it using Homebrew:
 ```bash
@@ -116,19 +131,19 @@ brew install pyenv
 > [!NOTE]  
 > If you don't have Homebrew installed, visit [brew.sh](https://brew.sh) and follow the installation instructions.
 
-5. Add pyenv configuration to your shell:
+7. Add pyenv configuration to your shell:
 ```bash
 echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.zshrc
 echo 'command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.zshrc
 echo 'eval "$(pyenv init -)"' >> ~/.zshrc
 ```
 
-6. Load your new configuration:
+8. Load your new configuration:
 ```bash
 source ~/.zshrc
 ```
 
-7. Install Python 3.11 (this will take a minute or so):
+9. Install Python 3.11 (this will take a minute or so):
 ```bash
 pyenv install 3.11
 ```
@@ -139,7 +154,7 @@ pyenv install 3.11
 > [!WARNING]  
 > You might see warnings about missing tkinter during installation. This is normal and won't affect our project. The installation will still complete successfully.
 
-8. Set Python 3.11 for your project:
+10. Set Python 3.11 for your project:
 ```bash
 pyenv local 3.11
 ```
@@ -147,7 +162,7 @@ pyenv local 3.11
 > [!NOTE]  
 > Using `pyenv` to pick a specific version of `python` requires us to use `python` instead of `python3` for commands going forward.
 
-9. Create a virtual environment:
+11. Create a virtual environment:
 ```bash
 python -m venv venv
 ```
@@ -160,7 +175,7 @@ This command does several things:
 - Sets up a fresh Python installation inside it
 - Isolates our project's dependencies from other Python projects
 
-10. Activate the virtual environment:
+12. Activate the virtual environment:
 ```bash
 source venv/bin/activate
 ```
@@ -173,12 +188,12 @@ Your prompt should now show `(venv)` or `(aptos-agent)` at the beginning.
 > 1. Navigating to your project directory
 > 2. Running `source venv/bin/activate`
 
-11. Upgrade pip (Python's package manager):
+13. Upgrade pip (Python's package manager):
 ```bash
 python -m pip install --upgrade pip
 ```
 
-12. Install Swarm, OpenAI and all our other dependencies by running:
+14. Install Swarm, OpenAI and all our other dependencies by running:
 
 `pip install -r requirements.txt`
 
