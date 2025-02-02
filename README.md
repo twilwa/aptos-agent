@@ -126,10 +126,13 @@ echo 'eval "$(pyenv init -)"' >> ~/.zshrc
 source ~/.zshrc
 ```
 
-7. Install Python 3.11:
+7. Install Python 3.11 (this will take a minute or so):
 ```bash
 pyenv install 3.11
 ```
+
+> [!NOTE]  
+> Now might be a good time to have a little coffee or something while that downloads.
 
 > [!WARNING]  
 > You might see warnings about missing tkinter during installation. This is normal and won't affect our project. The installation will still complete successfully.
@@ -139,13 +142,16 @@ pyenv install 3.11
 pyenv local 3.11
 ```
 
+> [!NOTE]  
+> Using `pyenv` to pick a specific version of `python` requires us to use `python` instead of `python3` for commands going forward.
+
 ## Part 2: Virtual Environment and Dependencies
 
 A virtual environment keeps your project's dependencies isolated, similar to how each Node.js project has its own `node_modules` folder.
 
 1. Create a virtual environment:
 ```bash
-python3 -m venv venv
+python -m venv venv
 ```
 
 This command does several things:
