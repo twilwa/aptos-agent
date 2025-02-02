@@ -76,7 +76,7 @@ A virtual environment keeps your project's dependencies isolated, similar to how
 
 1. Create a virtual environment:
 ```bash
-python -m venv venv
+python3 -m venv venv
 ```
 
 This command does several things:
