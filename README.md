@@ -361,7 +361,7 @@ https://explorer.aptoslabs.com/txn/32e7c0da2dbdfb7434d8147f437b3562b0d342b7d2437
 
 Now that you’ve verified transactions, let’s level up: **deploying your own Move module!**
 
-## Step 6: Deploying a Move Module
+### Step 6: Deploying a Move Module
 
 Your AI Agent can help you interact with Move smart contracts, but to deploy one, you'll need to use the Aptos CLI.  You can ask it to walk you through the process or follow these steps below:
 
