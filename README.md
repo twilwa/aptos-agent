@@ -225,7 +225,9 @@ python -m pip install --upgrade pip
 
 14. Install Swarm, OpenAI and all our other dependencies by running:
 
-`pip install -r requirements.txt`
+```bash
+pip install -r requirements.txt
+```
 
 > [!NOTE]  
 > Let's understand what each package does:
