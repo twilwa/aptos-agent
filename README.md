@@ -8,7 +8,7 @@ AI Agents have exploded in popularity thanks to large language models (LLMs) lik
 
 In 2024, projects like **Freysa** showcased an AI defending a blockchain account holding $47,000 in prize money while players paid to try to trick it, illustrating the creative (and sometimes devious) potential of these new assistants.
 
-![image.png](image)
+![image](https://github.com/user-attachments/assets/489a966c-bbf6-4a10-94b5-37740aca3919)
 
 > [!NOTE]  
 > We use Python in this tutorial but you should be able to complete this tutorial without any Python experience.
@@ -239,58 +239,210 @@ We are now fully ready to run our AI Agent!
 
 ## Part 2: Running Your AI Agent
 
-Your AI Agent has it's own account on Aptos's Devnet which it will use to do things on your behalf on-chain. You can use it to create a new token from scratch, call contracts that you write, or look up what is happening on-chain!
+Now that everything is set up, let's see what your AI Agent can actually do with a simple conversation.
 
-1. Start your agent:
+### Step 1: Do You Know My Wallet?
+
+Your AI Agent is designed to interact with the Aptos blockchain, but before it can help you, it needs to know who you are. The first thing you should do is check if the agent knows your wallet.
+
+Try running:
+
 ```bash
 python main.py
 ```
 
-You should see:
+You should see something like this:
+
 ```
+Aptos SDK wrapper loaded in test mode
+Found OpenAI API key: sk-pr...Rt3wA
+Found Devnet wallet address: 0x8fddcb869ad1df548fa98ae06f2c915855f059db1549315abfd2f9054af1f89e
 Starting Swarm CLI 🐝
-User: 
+User:
 ```
 
-2. Try some test commands such as:
+Once the AI is running, ask:
 
-- User: What can you do?
+```
+User: how much does my wallet have?
+```
 
-- User: Create a token called "Test Token" with symbol "TEST"
+The agent will check the balance for your stored wallet address:
 
-- User: Check my wallet balance
+```
+Aptos Agent: get_balance_in_apt_sync()
+Getting balance for wallet: 0x8fddcb869ad1df548fa98ae06f2c915855f059db1549315abfd2f9054af1f89e
+Wallet balance: 1.00 APT
+Aptos Agent: The balance in your wallet is 1 APT.
+```
 
-- User: Aptos has great docs! Aptos Docs Token plz.
+### Step 2: What’s Your Wallet?
+
+Next, check the AI Agent’s wallet by asking:
+
+```
+User: how much does your wallet have?
+```
+
+The agent will respond with its own balance:
+
+```
+Aptos Agent: get_balance_in_apt_sync()
+Getting balance for wallet: 0xc7042486514606bedb28a5ed8c979973e87df21bc81bf82894be44b835c6752a
+Wallet balance: 0.00 APT
+Aptos Agent: The balance in my wallet is 0 APT.
+```
+
+### Step 3: Compare Our Balances
+
+Now, ask:
+
+```
+User: what’s the difference?
+```
+
+And the agent will summarize:
+
+```
+Aptos Agent: The difference between your wallet and my wallet is that your wallet currently has 1 APT, while my wallet has 0 APT. That makes a difference of 1 APT.
+```
+
+### Step 4: Fund and Compare Again
+
+Your agent can fund its own wallet using the Aptos faucet. Try asking:
+
+```
+User: can you fund your wallet and then report the difference?
+```
+
+The agent will execute:
+
+```
+Aptos Agent: fund_wallet_in_apt_sync()
+Funding wallet: 0xc7042486514606bedb28a5ed8c979973e87df21bc81bf82894be44b835c6752a with 1000 APT
+Transaction hash: 32e7c0da2dbdfb7434d8147f437b3562b0d342b7d243716ba0be1ce83f23730d
+Funded wallet: 0xc7042486514606bedb28a5ed8c979973e87df21bc81bf82894be44b835c6752a
+```
+
+Now, the agent rechecks its balance:
+
+```
+Aptos Agent: get_balance_in_apt_sync()
+Getting balance for wallet: 0xc7042486514606bedb28a5ed8c979973e87df21bc81bf82894be44b835c6752a
+Wallet balance: 1000.00 APT
+```
+
+And confirms:
+
+```
+Aptos Agent: I’ve funded my wallet with 1000 APT. The new balance in my wallet is 1000 APT. The difference between your wallet (1 APT) and my wallet (1000 APT) is now 999 APT.
+```
+
+### Step 5: Double-Check With a Transaction Hash
+
+Sometimes, things go wrong on-chain. To verify that the funding worked, ask:
+
+```
+User: can you check that transaction hash?
+```
+
+Your agent will fetch the details using:
+
+```
+Aptos Agent: get_transaction_sync(32e7c0da2dbdfb7434d8147f437b3562b0d342b7d243716ba0be1ce83f23730d)
+```
+
+And it will return:
+
+```
+Aptos Agent: The transaction was successful! You can check it here:
+https://explorer.aptoslabs.com/txn/32e7c0da2dbdfb7434d8147f437b3562b0d342b7d243716ba0be1ce83f23730d?network=devnet
+```
+
+Now that you’ve verified transactions, let’s level up: **deploying your own Move module!**
+
+## Step 6: Deploying a Move Module
+
+Your AI Agent can help you interact with Move smart contracts, but to deploy one, you'll need to use the Aptos CLI.  You can ask it to walk you through the process or follow these steps below:
+
+1. Make sure you have the Aptos CLI installed:
+
+```bash
+aptos --version
+```
+
+If you don't [get it here](https://aptos.dev/en/build/cli)
+
+2. Ensure you have the `Move.toml` and `sources/access.move` files.  
+
+3. Compile the contract by running:
+
+```bash
+aptos move compile --named-addresses access=default
+```
+
+4. Publish it with:
+
+```bash
+aptos move publish --named-addresses access=default
+```
+
+You’ll be asked to confirm a gas fee. Type `y` to continue.
 
 > [!NOTE]  
-> Your agent should respond intelligently to each command, explaining what it's doing and providing blockchain transaction details when relevant. You'll want to check everything deployed correctly using the indexer or explorer. You can exit the conversation with your agent by typing `cmd+z` on Mac.
+> If you get an error here its because you haven't funded your wallet address or set up the aptos CLI to know your wallet address.
+> Run `aptos init` to create and fund a new wallet. Make sure to update your .env with this address and restart your terminal.
 
-![Screenshot 2025-01-16 at 2 23 03 PM](https://github.com/user-attachments/assets/11318b9b-4afd-4357-a8ab-93d7e60e9a40)
+5. Once deployed, you can check your module:
 
-Let's verify our new token:
+```
+User: check my modules, plz
+```
 
-3. Visit the [Aptos Explorer](https://explorer.aptoslabs.com/?network=testnet).
+And your agent will respond:
 
-4. Switch to "Testnet" network if not already selected.
+```
+Aptos Agent: Your account at 0x8fddcb869ad1df548fa98ae06f2c915855f059db1549315abfd2f9054af1f89e has the following module:
 
-5. Paste your transaction hash and select it from the dropdown that loads.
+Module Name: simple_storage
+- get_meaning_of_view: Returns 42.
+- get_value: Retrieves a stored number.
+- store_value: Stores a new number.
 
-6. Click the "Payload" tab to see your token details.
+See it on-chain:  
+https://explorer.aptoslabs.com/account/0x8fddcb869ad1df548fa98ae06f2c915855f059db1549315abfd2f9054af1f89e/modules/code/simple_storage?network=devnet
+```
 
-![Screenshot 2025-01-16 at 2 29 27 PM](https://github.com/user-attachments/assets/4ff96e5f-b0f0-45b2-aba1-f9866db3fb71)
+### Step 7: Calling Your Module’s Functions
 
-## What's Next?
+Ask your agent:
 
-Your AI agent can now:
-- Understand and respond to blockchain questions
-- Execute Aptos transactions
-- Help users interact with the blockchain
-- Create and verify tokens on testnet
+```
+User: can you call the view function?
+```
 
-In the next tutorial, we'll improve the agent with:
-- A setup wizard for configuration
-- Optional social media features
-- Better test mode capabilities
+The agent will execute:
+
+```
+Aptos Agent: execute_view_function_sync()
+Executing view function: get_meaning_of_view
+Result: 42
+```
+
+Now, try storing a number:
+
+```
+User: can you store that number in store_value?
+```
+
+The agent submits:
+
+```
+Aptos Agent: execute_entry_function_sync()
+Transaction submitted successfully! Txn Hash: 0x6ec57bccc28f29ee74c70ecab6df0f427307b228ce37f4637c3f97e68149d426
+```
+
+Pretty great, right!?
 
 Here are some ideas for next steps:
 1. Learn more about Move smart contracts with the [Your First Move Module Guide at aptos.dev](https://aptos.dev/en/build/guides/first-move-module), perhaps build a custom Move modules to interact with?
