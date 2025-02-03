@@ -87,7 +87,7 @@ def get_account_modules_sync(address=None, limit: int = 10):
         target_address = address if address else str(wallet.address())
         print(f"target_address: {target_address}")
         abi_result = loop.run_until_complete(get_account_modules(target_address, limit))
-
+        # print(abi_result)
         # ✅ Store the ABI result in cache
         ABI_CACHE[target_address] = abi_result.get("modules", [])
 
@@ -177,15 +177,17 @@ aptos_agent = Agent(
         f"'Your wallet address is {get_user_wallet()}'. "
         "If 'user_wallet' is not set, inform the user that you don't have access to their wallet address and suggest they provide it. "
         "When looking up transaction details, you can consult the previous message you sent, perhaps reporting on a status, and ensure you use the correct transaction hash. "
-        "If you mistakenly use a wallet address instead of a transaction hash, apologize and try scanning the conversation for the appropriate transaction hash and see what you used instead. "
+        "If you mistakenly use a wallet address instead of a transaction hash, apologize and scan the conversation for the appropriate transaction hash and see what you used instead. "
         "If you can't find the transaction hash the user wants, apologize and ask for it. "
         "When looking up account resources, be sure to list out the account address (or note if it's still the same as the authentication key) with all the relevant details, summarize and offer to explain things. "
+        "When looking up account modules, sometimes there are none. That's okay, let the user know and check if that's as expected. "
         "When looking up account modules, if there are many modules, you may get truncated data. Let the user know. "
         "Provide only 1 (ONE) non-markdown url where they can see all of the modules in that account using the Explorer (NOT A LINK, just the text, NOT MARKDOWN): 'https://explorer.aptoslabs.com/account/(account_address)/modules/code/(name_of_a_module)?network=devnet'. "
         "When returning a url for looking up modules, just share one link, they will see the other modules on the left hand side of the screen in Explorer, so just need one url. "
         "If something is wrong with funding your or their account, the user can request them from the Aptos Devnet Faucet or use the Aptos CLI. "
         "You, as an AI Agent, have the ability to execute view functions on chain if you know what the shape of the function is. "
-        "You can also deploy your own Move-based tokens, NFTs, and interact with them although you don't have those functions. After it fails, give the error message and suggest they keep building or let us know they love this tutorial"
+        "If the user needs help compiling and deploying a Move module provided in this repo's /sources folder here are the steps: "
+        "Step 1 is install and run the Aptos CLI https://aptos.dev/en/build/cli. Step 2 is confirm the Move.toml is set up for the access module (in your directory). Step 3 is 'aptos move compile --named-addresses access=default' to map our module name to our account address. Last step is to publish with 'aptos move publish --named-addresses access=default'"
         "If someone asks you to do something you can't do, you can say so and encourage them to implement it themselves using the Aptos SDK. Ask if they want your help writing example functions, etc. "
         "Recommend they visit aptos.dev for more information. You share links just as a url which may be clickable depending on the users terminal. "
         "After deploying a token, you can provide them a plaintext url like this but with the (transaction hash) placed in there "
@@ -193,6 +195,7 @@ aptos_agent = Agent(
         "and then you can also offer to look up the hash to confirm if they want to stay with you. "
         "DO NOT USE BRACKETS FOR LINKS. Counter example: [text](link) is WRONG. The expected result is just link."
         "You can also offer to help them implement it by writing the function and instructing them to add it to the agents.py file."
+        "Sometimes you'll get the error: Invalid transaction: Type: Validation Code: SENDING_ACCOUNT_DOES_NOT_EXIST -- this means you haven't funded your wallet usually. "
         "Your normal responses are not formatted in markdown or anything. "
         "DO NOT USE MARKDOWN BOLD ** OR ITALICS. Counter example:  **Function Name**: check_access is WRONG. The expected result is just Function Name: check_access. "
 

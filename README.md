@@ -1,17 +1,50 @@
-# Building Your AI-Powered Aptos Agent with Python
+# Building Your AI-Powered Aptos Agent
 
-The Aptos blockchain allows developers to interact with Move modules (smart contracts) through various SDKs. This tutorial, inspired by [Brian Wong's](https://x.com/briannwongg/status/1867716033659965672) Aptos Agent Template ([on Replit](https://replit.com/@brianwww/Aptos-Agent)), will help you create your own AI-powered blockchain assistant.
+The Aptos blockchain allows developers—and even non-developers—to interact with Move modules (smart contracts) through various SDKs, APIs, and ABIs. Now, with the help of this AI Agent, you can do all that **through a conversation**—no deep coding expertise required. If the idea of opening a terminal makes you nervous, check out [Brian Wong’s Aptos Agent Template](https://x.com/briannwongg/status/1867716033659965672) on Replit (no Github required!), which inspired this very tutorial.
 
-You'll learn how to:
-1. Set up a Python development environment for blockchain development
-2. Create a virtual environment for project dependency management
-3. Build an AI agent that can interact with the Aptos blockchain using the Aptos Python SDK
-4. Test your agent with real blockchain interactions
+## Why Build an AI Agent on Aptos?
+
+AI Agents have exploded in popularity thanks to large language models (LLMs) like ChatGPT. Instead of performing narrow tasks (like old-school trading bots), our AI Agent uses an LLM in a conversation loop ([called a REPL](https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop)) and some pre-defined functions so that it can follow plain-English instructions—“Deploy a token,” “Check my wallet balance,” or “Store data on-chain.” 
+
+In 2024, projects like **Freysa** showcased an AI defending a blockchain account holding $47,000 in prize money while players paid to try to trick it, illustrating the creative (and sometimes devious) potential of these new assistants.
+
+![image.png](image)
 
 > [!NOTE]  
-> For Node.js Developers: Throughout this tutorial, we'll provide analogies to Node.js/JavaScript concepts to help you understand Python's approach.
+> We use Python in this tutorial but you should be able to complete this tutorial without any Python experience.
 
-Imagine our Aptos Agent as a new employee at a bank. They need two things to do their job: knowledge of banking procedures (that's our AI's instructions) and access to the actual banking systems (that's our blockchain integration). We'll set up both components step by step.
+By connecting GPT-4o to Aptos’s Move smart contracts and Python’s aptos-sdk, we’re building an agent that:
+
+- **Understands** your instructions in everyday language.
+- **Interacts** with your on-chain resources (e.g., deploying tokens, querying data).
+- **Executes** transactions on your behalf, all through simple chat prompts.
+
+## Tutorial Overview
+
+This guide will show you how to:
+
+1. Set up a Python environment for running your agent.
+2. Build and configure an AI agent that you can play with on your computer.
+3. Test your agent with real blockchain actions — even those in your own Move modules!
+
+If you’re coming from Node.js, don’t worry—we’ll provide analogies to help bridge the gap.
+
+## How It Works
+
+You can think of your AI Agent as a helpful bank employee. They constantly listen to what you say (`main.py`), know how to handle your finances on-chain (`aptos_wrapper.py`), and have been trained by Corporate on how to be helpful (`agents.py`).
+
+In other words, the Aptos Agent is built with three main files:
+
+1. `main.py` - This starts the conversation loop (REPL) between you and the Agent.
+2. `aptos_wrapper.py` - This tells the agent how to talk to the Aptos blockchain using the Aptos SDK and Fullnode API.
+3. `agents.py` - This is where functions that the AI Agent can actually directly call live. It’s also where we define some specific “instructions” for GPT.
+
+By running `main.py`, you start a conversation where you can ask the AI Agent whatever you want, and the agent will do it’s best to answer and do what you ask.  No complicated scripts **or manual transaction-building required.**
+
+## Pre-requisites
+
+1. $5 for OpenAI (this tutorial will only use up a few pennies, but that’s their minimum)
+2. A GitHub account to download the Agent with `git clone`
 
 > [!NOTE]  
 > This tutorial is written for Mac / Linux, so Windows users will need to modify some commands.
@@ -20,9 +53,6 @@ Imagine our Aptos Agent as a new employee at a bank. They need two things to do 
 
 ## Part 0: Getting Your OpenAI API Key
 To create an AI Agent, you will need an API key for the AI. This agent was written to work with ChatGPT 4o, so before we dive into the details of how to run the agent’s code, you will need to create an OpenAI account. 
-
-> [!NOTE]  
-> This will require loading at least $5 into your account, but the actual tutorial should cost only a couple pennies to interact with your AI Agent!
 
 **If you already have an OpenAI account:**
 
