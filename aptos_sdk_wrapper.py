@@ -171,6 +171,7 @@ async def get_token_balance(address: str, creator_address: str, collection_name:
     except Exception as e:
         return f"Error getting token balance: {str(e)}"
 
+# TODO: Find out from Brian if there's a deployed version of this contract on Devnet, or if we need to compile and deploy this as well in the tutorial...
 async def create_token(sender: Account, name: str, symbol: str, icon_uri: str,
                        project_uri: str):
     """Creates a token with specified attributes."""
@@ -210,8 +211,6 @@ async def execute_entry_function(
     Returns:
         The transaction hash of the submitted entry function.
     """
-    from aptos_sdk.transactions import EntryFunction, TransactionArgument
-    from aptos_sdk.bcs import Serializer
 
     try:
         # Extract the module address and module name
@@ -265,7 +264,7 @@ async def execute_entry_function(
         # ✅ Step 4: Extract required parameters from ABI
         expected_params = function_abi.get("params", [])
         print(f"Expected Parameters: {expected_params}")
-        print(f"Args!: {args}")
+        print(f"Args: {args}")
 
         # Ensure the signer (`&signer`) is NOT passed in `args`
         if expected_params and expected_params[0] == "&signer":
