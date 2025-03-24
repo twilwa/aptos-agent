@@ -1,9 +1,12 @@
 print("Aptos SDK wrapper loaded in test mode")
-import os
 import requests
 from aptos_sdk.account import Account, AccountAddress
 from aptos_sdk.async_client import FaucetClient, RestClient
-from aptos_sdk.transactions import EntryFunction, TransactionArgument, TransactionPayload
+from aptos_sdk.transactions import (
+    EntryFunction,
+    TransactionArgument,
+    TransactionPayload,
+)
 from aptos_sdk.bcs import Serializer
 
 # Initialize clients for devnet (changed from testnet)
@@ -11,13 +14,14 @@ NODE_URL = "https://api.devnet.aptoslabs.com/v1"
 rest_client = RestClient(NODE_URL)
 faucet_client = FaucetClient("https://faucet.devnet.aptoslabs.com", rest_client)
 
+
 async def get_account_modules(address: str, limit: int = 10):
     """
     Fetch the published modules for a specific account,
     capping the results at 'limit' to avoid large GPT-4 prompts.
     """
     import requests
-    
+
     # Add '?limit={limit}' for server-side pagination.
     # Then if the account has more than 'limit' modules, the server might
     # provide an "X-Aptos-Cursor" header for further pages (if needed).
@@ -39,8 +43,7 @@ async def get_account_modules(address: str, limit: int = 10):
                 byte_len = len(m["bytecode"])
                 if byte_len > 300:
                     m["bytecode"] = (
-                        m["bytecode"][:300]
-                        + f"...(truncated {byte_len-300} chars)"
+                        m["bytecode"][:300] + f"...(truncated {byte_len - 300} chars)"
                     )
 
             # Possibly parse 'abi' and only keep minimal info
@@ -53,7 +56,7 @@ async def get_account_modules(address: str, limit: int = 10):
                         # Remove or shorten params if super large
                         if "params" in fn and len(fn["params"]) > 5:
                             fn["params"] = fn["params"][:5] + ["...truncated"]
-            
+
             summarized_modules.append(m)
 
         # If the server truncated results to 'limit' behind the scenes,
@@ -64,11 +67,12 @@ async def get_account_modules(address: str, limit: int = 10):
             "note": (
                 f"Requested up to {limit} modules. "
                 "Large fields were truncated to prevent large GPT-4 prompts."
-            )
+            ),
         }
 
     except requests.exceptions.RequestException as e:
         return f"Error getting account modules: {str(e)}"
+
 
 async def execute_view_function(function_id: str, type_args: list, args: list):
     """
@@ -95,19 +99,22 @@ async def execute_view_function(function_id: str, type_args: list, args: list):
     except requests.exceptions.RequestException as e:
         return {"error": f"Error executing view function: {str(e)}"}
 
+
 async def fund_wallet(wallet_address, amount):
     """Funds a wallet with a specified amount of APT."""
     print(f"Funding wallet: {wallet_address} with {amount} APT")
     amount = int(amount)
     if amount > 1000:
         raise ValueError(
-            "Amount too large. Please specify an amount less than 1000 APT")
+            "Amount too large. Please specify an amount less than 1000 APT"
+        )
     octas = amount * 10**8  # Convert APT to octas
     if isinstance(wallet_address, str):
         wallet_address = AccountAddress.from_str(wallet_address)
     txn_hash = await faucet_client.fund_account(wallet_address, octas, True)
     print(f"Transaction hash: {txn_hash}\nFunded wallet: {wallet_address}")
     return wallet_address
+
 
 async def get_balance(wallet_address):
     """Retrieves the balance of a specified wallet."""
@@ -119,6 +126,7 @@ async def get_balance(wallet_address):
     print(f"Wallet balance: {balance_in_apt:.2f} APT")
     return balance
 
+
 async def transfer(sender: Account, receiver, amount):
     """Transfers a specified amount from sender to receiver."""
     if isinstance(receiver, str):
@@ -126,6 +134,7 @@ async def transfer(sender: Account, receiver, amount):
     txn_hash = await rest_client.bcs_transfer(sender, receiver, amount)
     print(f"Transaction hash: {txn_hash} and receiver: {receiver}")
     return txn_hash
+
 
 async def get_transaction(txn_hash: str):
     """Gets details about a specific transaction."""
@@ -136,7 +145,6 @@ async def get_transaction(txn_hash: str):
         print(f"Full error: {str(e)}")
         return f"Error getting transaction: {str(e)}"
 
-import requests
 
 async def get_account_resources(address: str):
     """Gets all resources associated with an account using direct API call."""
@@ -154,16 +162,19 @@ async def get_account_resources(address: str):
     except requests.exceptions.RequestException as e:
         return f"Error getting account resources: {str(e)}"
 
-async def get_token_balance(address: str, creator_address: str, collection_name: str, token_name: str):
+
+async def get_token_balance(
+    address: str, creator_address: str, collection_name: str, token_name: str
+):
     """Gets the token balance for a specific token."""
     try:
         if isinstance(address, str):
             address = AccountAddress.from_str(address)
         resources = await rest_client.get_account_resources(address)
         for resource in resources:
-            if resource['type'] == '0x3::token::TokenStore':
+            if resource["type"] == "0x3::token::TokenStore":
                 # Parse token data to find specific token balance
-                tokens = resource['data']['tokens']
+                tokens = resource["data"]["tokens"]
                 token_id = f"{creator_address}::{collection_name}::{token_name}"
                 if token_id in tokens:
                     return tokens[token_id]
@@ -171,9 +182,11 @@ async def get_token_balance(address: str, creator_address: str, collection_name:
     except Exception as e:
         return f"Error getting token balance: {str(e)}"
 
+
 # TODO: Find out from Brian if there's a deployed version of this contract on Devnet, or if we need to compile and deploy this as well in the tutorial...
-async def create_token(sender: Account, name: str, symbol: str, icon_uri: str,
-                       project_uri: str):
+async def create_token(
+    sender: Account, name: str, symbol: str, icon_uri: str, project_uri: str
+):
     """Creates a token with specified attributes."""
     print(
         f"Creating FA with name: {name}, symbol: {symbol}, icon_uri: {icon_uri}, project_uri: {project_uri}"
@@ -187,15 +200,23 @@ async def create_token(sender: Account, name: str, symbol: str, icon_uri: str,
             TransactionArgument(symbol, Serializer.str),
             TransactionArgument(icon_uri, Serializer.str),
             TransactionArgument(project_uri, Serializer.str),
-        ])
+        ],
+    )
     signed_transaction = await rest_client.create_bcs_signed_transaction(
-        sender, TransactionPayload(payload))
+        sender, TransactionPayload(payload)
+    )
     txn_hash = await rest_client.submit_bcs_transaction(signed_transaction)
     print(f"Transaction hash: {txn_hash}")
     return txn_hash
 
+
 async def execute_entry_function(
-    sender: Account, function_id: str, type_args: list, args: list, abi_cache=None, optional_fetch_abi=False
+    sender: Account,
+    function_id: str,
+    type_args: list,
+    args: list,
+    abi_cache=None,
+    optional_fetch_abi=False,
 ):
     """
     Dynamically executes a Move entry function by analyzing its ABI.
@@ -291,7 +312,9 @@ async def execute_entry_function(
                 serialized_args.append(TransactionArgument(bool(arg), Serializer.bool))
             elif param_type.startswith("vector<"):  # Handle vector types
                 if not isinstance(arg, list):
-                    return {"error": f"Expected a list for `{param_type}` but got {type(arg).__name__}"}
+                    return {
+                        "error": f"Expected a list for `{param_type}` but got {type(arg).__name__}"
+                    }
                 inner_type = param_type.replace("vector<", "").replace(">", "")
                 if inner_type == "u64":
                     serialized_args.append(TransactionArgument(arg, [Serializer.u64]))
