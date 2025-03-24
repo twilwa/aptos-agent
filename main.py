@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv, set_key
-from swarm.repl import run_demo_loop
+from agents.repl import run_demo_loop
 from agents import close_event_loop, aptos_agent
 from aptos_sdk.account import Account
 import asyncio

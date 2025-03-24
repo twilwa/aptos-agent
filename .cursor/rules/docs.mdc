@@ -1,0 +1,9 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+When working with documentation within your context window:
+- Alert the user if the documentation does not reference the task they're asking you to accomplish
+- Pause your task and wait for guidance if the available documentation does not have content related to your current task, unless specifically instructed to work outside the scope of available documentation
+- Do not 'just wing it', make assumptions about functionality, attempt a best-guess implementation, or start refactoring unless you have task-relevant documentation available, unless the user specifically instructs you to continue without reference documentation.

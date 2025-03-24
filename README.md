@@ -148,7 +148,7 @@ python3 --version
 ```
 
 > [!NOTE]
-> We will need python version 3.10 or higher to work with the AI Agent library `swarm`.
+> We will need python version 3.10 or higher to work with the AI Agent library `agents`.
 > `pyenv` will help us choose which version of python we are using.
 
 6. Ensure you have `pyenv` installed by running `pyenv --version`.
@@ -223,7 +223,7 @@ Your prompt should now show `(venv)` or `(aptos-agent)` at the beginning.
 python -m pip install --upgrade pip
 ```
 
-14. Install Swarm, OpenAI and all our other dependencies by running:
+14. Install agents, OpenAI and all our other dependencies by running:
 
 ```bash
 pip install -r requirements.txt
@@ -231,7 +231,7 @@ pip install -r requirements.txt
 
 > [!NOTE]  
 > Let's understand what each package does:
-> - `swarm`: OpenAI's framework for creating AI agents that can use tools and make decisions
+> - `agents`: OpenAI's framework for creating AI agents that can use tools and make decisions
 > - `openai`: Connects to OpenAI's API for the language model
 > - `python-dotenv`: Loads environment variables (like your API keys)
 > - `requests` & `requests-oauthlib`: Handles HTTP requests and OAuth authentication
@@ -259,7 +259,7 @@ You should see something like this:
 Aptos SDK wrapper loaded in test mode
 Found OpenAI API key: sk-pr...Rt3wA
 Found Devnet wallet address: 0x8fddcb869ad1df548fa98ae06f2c915855f059db1549315abfd2f9054af1f89e
-Starting Swarm CLI 🐝
+Starting agents CLI 🐝
 User:
 ```
 

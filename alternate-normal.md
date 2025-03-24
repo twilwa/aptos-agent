@@ -122,7 +122,7 @@ Now let's create our agent's core files:
 2. Add this test code to `main.py`:
     ```python
     from dotenv import load_dotenv
-    from swarm.repl import run_demo_loop
+    from agents.repl import run_demo_loop
     from agents import close_event_loop, aptos_agent
     import asyncio
 
@@ -153,7 +153,7 @@ Now let's create our agent's core files:
     from dotenv import load_dotenv
     from aptos_sdk.account import Account
     from aptos_sdk_wrapper import get_balance, fund_wallet, transfer, create_token
-    from swarm import Agent
+    from agents import Agent
 
     # Load environment variables
     load_dotenv()
@@ -189,7 +189,7 @@ Now let's create our agent's core files:
 
 2. You should see:
     ```
-    Starting Swarm CLI 🐝
+    Starting agents CLI 🐝
     User: 
     ```
 

@@ -9,7 +9,7 @@ from aptos_sdk_wrapper import (
     get_balance, fund_wallet, transfer, create_token,
     get_transaction, get_account_resources, get_token_balance, execute_view_function, execute_entry_function, get_account_modules, 
 )
-from swarm import Agent
+from agents import Agent
 from typing import List
 
 # Load environment variables first!

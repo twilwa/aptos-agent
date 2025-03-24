@@ -168,7 +168,7 @@ Create three main files:
 1. `main.py` - Our entry point:
 ```python
 from dotenv import load_dotenv
-from swarm.repl import run_demo_loop
+from agents.repl import run_demo_loop
 from agents import close_event_loop, aptos_agent
 import asyncio
 
@@ -186,7 +186,7 @@ load_dotenv()
 import os
 import asyncio
 from aptos_sdk.account import Account
-from swarm import Agent
+from agents import Agent
 
 # Initialize the event loop
 loop = asyncio.new_event_loop()
@@ -239,7 +239,7 @@ python main.py
 
 You should see:
 ```
-Starting Swarm CLI 🐝
+Starting agents CLI 🐝
 User: 
 ```
 
