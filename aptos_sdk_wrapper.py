@@ -146,8 +146,6 @@ async def get_transaction(txn_hash: str):
         return f"Error getting transaction: {str(e)}"
 
 
-
-
 async def get_account_resources(address: str):
     """Gets all resources associated with an account using direct API call."""
     NODE_URL = "https://api.devnet.aptoslabs.com/v1"  # Update for the correct network
