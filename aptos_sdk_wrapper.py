@@ -107,7 +107,7 @@ async def execute_view_function(function_id: str, type_args: list[str], args: li
 async def fund_wallet(wallet_address: str | AccountAddress, amount: int) -> AccountAddress:
     """Funds a wallet with a specified amount of APT."""
     print(f"Funding wallet: {wallet_address} with {amount} APT")
-    amount: int = int(amount)
+    amount: int = amount
     if amount > 1000:
         raise ValueError(
             "Amount too large. Please specify an amount less than 1000 APT")
