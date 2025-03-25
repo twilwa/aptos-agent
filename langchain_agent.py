@@ -4,6 +4,10 @@ LangChain agent for interacting with the Aptos blockchain.
 from asyncio.events import AbstractEventLoop
 
 
+from asyncio.events import AbstractEventLoop
+from functools import wraps
+
+
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.runnables.base import RunnableSerializable
 from langchain_core.agents import AgentAction, AgentFinish
@@ -14,7 +18,7 @@ from langchain_openai.chat_models.base import ChatOpenAI
 from langchain.agents.agent import AgentExecutor
 import os
 import asyncio
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Callable, TypeVar, cast
 from dotenv import load_dotenv
 
 # LangChain imports
@@ -40,15 +44,46 @@ load_dotenv()
 agent_wallet: Account = Account.generate()
 agent_address: str = str(agent_wallet.address())
 
+F = TypeVar(name='F', bound=Callable[..., Any])
+
+def sync_adapter(async_func: Callable[..., Any]) -> Callable[..., Any]:
+    """
+    Decorator that converts an async function to a synchronous one.
+    
+    This decorator wraps an async function and returns a synchronous version
+    that runs the original function in an event loop.
+    
+    Args:
+        async_func: The async function to convert to synchronous
+        
+    Returns:
+        A synchronous version of the function
+    """
+    @wraps(async_func)
+    def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
+        loop: AbstractEventLoop = asyncio.get_event_loop()
+        return loop.run_until_complete(future=async_func(*args, **kwargs))
+    
+    return sync_wrapper
+
 class GetBalanceTool(BaseTool):
     """Tool for getting the balance of an Aptos wallet."""
-    name = "get_balance"
-    description = "Get the balance of an Aptos wallet"
+    name: str = "get_balance"
+    description: str = "Get the balance of an Aptos wallet"
     
     def _run(self, address: Optional[str] = None) -> str:
         """Run the tool synchronously."""
-        loop: AbstractEventLoop = asyncio.get_event_loop()
-        return loop.run_until_complete(future=self._arun(address))
+        return self._arun_sync(address)
+    
+    @sync_adapter
+    async def _arun_sync(self, address: Optional[str] = None) -> str:
+        """Synchronous wrapper for _arun."""
+        target_address: str = address or agent_address
+        try:
+            balance: int = await get_balance(wallet_address=target_address)
+            return f"Balance for {target_address}: {balance/10**8} APT"
+        except Exception as e:
+            return f"Error getting balance: {str(e)}"
     
     async def _arun(self, address: Optional[str] = None) -> str:
         """Run the tool asynchronously."""
@@ -61,13 +96,24 @@ class GetBalanceTool(BaseTool):
 
 class FundWalletTool(BaseTool):
     """Tool for funding an Aptos wallet."""
-    name = "fund_wallet"
-    description = "Fund an Aptos wallet with a specified amount of APT"
+    name: str = "fund_wallet"
+    description: str = "Fund an Aptos wallet with a specified amount of APT"
     
     def _run(self, amount: int, address: Optional[str] = None) -> str:
         """Run the tool synchronously."""
-        loop: AbstractEventLoop = asyncio.get_event_loop()
-        return loop.run_until_complete(future=self._arun(amount, address))
+        return self._arun_sync(amount, address)
+    
+    @sync_adapter
+    async def _arun_sync(self, amount: int, address: Optional[str] = None) -> str:
+        """Synchronous wrapper for _arun."""
+        target_address: str = address or agent_address
+        try:
+            if amount > 1000:
+                return "Error: Cannot fund more than 1000 APT at once"
+            await fund_wallet(wallet_address=target_address, amount=amount)
+            return f"Successfully funded {target_address} with {amount} APT"
+        except Exception as e:
+            return f"Error funding wallet: {str(e)}"
     
     async def _arun(self, amount: int, address: Optional[str] = None) -> str:
         """Run the tool asynchronously."""
@@ -82,13 +128,22 @@ class FundWalletTool(BaseTool):
 
 class TransferTool(BaseTool):
     """Tool for transferring APT between wallets."""
-    name = "transfer"
-    description = "Transfer APT from the agent's wallet to another wallet"
+    name: str = "transfer"
+    description: str = "Transfer APT from the agent's wallet to another wallet"
     
     def _run(self, receiver: str, amount: int) -> str:
         """Run the tool synchronously."""
-        loop: AbstractEventLoop = asyncio.get_event_loop()
-        return loop.run_until_complete(future=self._arun(receiver, amount))
+        return self._arun_sync(receiver, amount)
+    
+    @sync_adapter
+    async def _arun_sync(self, receiver: str, amount: int) -> str:
+        """Synchronous wrapper for _arun."""
+        try:
+            octas: int = amount * 10**8  # Convert from APT to octas
+            txn_hash: str = await transfer(sender=agent_wallet, receiver=receiver, amount=octas)
+            return f"Successfully transferred {amount} APT to {receiver}\nTransaction hash: {txn_hash}"
+        except Exception as e:
+            return f"Error transferring funds: {str(e)}"
     
     async def _arun(self, receiver: str, amount: int) -> str:
         """Run the tool asynchronously."""
@@ -101,13 +156,21 @@ class TransferTool(BaseTool):
 
 class GetTransactionTool(BaseTool):
     """Tool for getting details about a transaction."""
-    name = "get_transaction"
-    description = "Get details about a transaction using its hash"
+    name: str = "get_transaction"
+    description: str = "Get details about a transaction using its hash"
     
     def _run(self, txn_hash: str) -> str:
         """Run the tool synchronously."""
-        loop: AbstractEventLoop = asyncio.get_event_loop()
-        return loop.run_until_complete(future=self._arun(txn_hash))
+        return self._arun_sync(txn_hash)
+    
+    @sync_adapter
+    async def _arun_sync(self, txn_hash: str) -> str:
+        """Synchronous wrapper for _arun."""
+        try:
+            result = await get_transaction(txn_hash)
+            return f"Transaction details: {result}"
+        except Exception as e:
+            return f"Error getting transaction: {str(e)}"
     
     async def _arun(self, txn_hash: str) -> str:
         """Run the tool asynchronously."""
@@ -119,13 +182,29 @@ class GetTransactionTool(BaseTool):
 
 class GetResourcesTool(BaseTool):
     """Tool for getting account resources."""
-    name = "get_resources"
-    description = "Get the resources associated with an Aptos account"
+    name: str = "get_resources"
+    description: str = "Get the resources associated with an Aptos account"
     
     def _run(self, address: Optional[str] = None) -> str:
         """Run the tool synchronously."""
-        loop: AbstractEventLoop = asyncio.get_event_loop()
-        return loop.run_until_complete(future=self._arun(address))
+        return self._arun_sync(address)
+    
+    @sync_adapter
+    async def _arun_sync(self, address: Optional[str] = None) -> str:
+        """Synchronous wrapper for _arun."""
+        target_address: str = address or agent_address
+        try:
+            resources: List[Dict[str, Any]] = await get_account_resources(address=target_address)
+            # Format for better readability - just show types
+            resource_types: list[Any] = [res['type'] for res in resources if 'type' in res]
+            summary: str = f"Account {target_address} has {len(resource_types)} resources:\n"
+            for i, res_type in enumerate(resource_types[:10]):
+                summary += f"{i+1}. {res_type}\n"
+            if len(resource_types) > 10:
+                summary += f"... and {len(resource_types) - 10} more"
+            return summary
+        except Exception as e:
+            return f"Error getting account resources: {str(e)}"
     
     async def _arun(self, address: Optional[str] = None) -> str:
         """Run the tool asynchronously."""
@@ -145,13 +224,44 @@ class GetResourcesTool(BaseTool):
 
 class GetModulesTool(BaseTool):
     """Tool for getting account modules."""
-    name = "get_modules"
-    description = "Get the modules published by an Aptos account"
+    name: str = "get_modules"
+    description: str = "Get the modules published by an Aptos account"
     
     def _run(self, address: Optional[str] = None, limit: int = 10) -> str:
         """Run the tool synchronously."""
-        loop: AbstractEventLoop = asyncio.get_event_loop()
-        return loop.run_until_complete(future=self._arun(address, limit))
+        return self._arun_sync(address, limit)
+    
+    @sync_adapter
+    async def _arun_sync(self, address: Optional[str] = None, limit: int = 10) -> str:
+        """Synchronous wrapper for _arun."""
+        target_address: str = address or agent_address
+        try:
+            result: dict[str, Any] = await get_account_modules(address=target_address, limit=limit)
+            if "error" in result:
+                return f"Error: {result['error']}"
+            
+            modules: list[dict[str, Any]] = result.get("modules", [])
+            if not modules:
+                return f"Account {target_address} has no published modules."
+            
+            summary: str = f"Account {target_address} has {len(modules)} modules:\n"
+            for i, module in enumerate(modules):
+                if "abi" in module and "name" in module["abi"]:
+                    name: str = module["abi"]["name"]
+                    summary += f"{i+1}. {name}\n"
+                    
+                    # Add exposed function names
+                    if "exposed_functions" in module["abi"]:
+                        functions: list[Any] = module["abi"]["exposed_functions"]
+                        for func in functions[:5]:
+                            if "name" in func:
+                                summary += f"   - {func['name']}\n"
+                        if len(functions) > 5:
+                            summary += f"   - ... and {len(functions) - 5} more functions\n"
+            
+            return summary
+        except Exception as e:
+            return f"Error getting account modules: {str(e)}"
     
     async def _arun(self, address: Optional[str] = None, limit: int = 10) -> str:
         """Run the tool asynchronously."""
@@ -172,9 +282,9 @@ class GetModulesTool(BaseTool):
                     summary += f"{i+1}. {name}\n"
                     
                     # Add exposed function names
-                    if "abi" in module and "exposed_functions" in module["abi"]:
+                    if "exposed_functions" in module["abi"]:
                         functions: list[Any] = module["abi"]["exposed_functions"]
-                        for j, func in enumerate(functions[:5]):
+                        for func in functions[:5]:
                             if "name" in func:
                                 summary += f"   - {func['name']}\n"
                         if len(functions) > 5:
@@ -186,24 +296,36 @@ class GetModulesTool(BaseTool):
 
 class ExecuteViewFunctionTool(BaseTool):
     """Tool for executing a view function."""
-    name = "execute_view_function"
-    description = "Execute a Move view function on the Aptos blockchain"
+    name: str = "execute_view_function"
+    description: str = "Execute a Move view function on the Aptos blockchain"
     
     def _run(self, function_id: str, type_args: Optional[List[str]] = None, args: Optional[List[Any]] = None) -> str:
         """Run the tool synchronously."""
-        loop: AbstractEventLoop = asyncio.get_event_loop()
+        return self._arun_sync(function_id, type_args, args)
+    
+    @sync_adapter
+    async def _arun_sync(self, function_id: str, type_args: Optional[List[str]] = None, args: Optional[List[Any]] = None) -> str:
+        """Synchronous wrapper for _arun."""
         # Initialize empty lists if None is passed
         _type_args = type_args if type_args is not None else []
         _args = args if args is not None else []
-        return loop.run_until_complete(future=self._arun(function_id, _type_args, _args))
-    
-    async def _arun(self, function_id: str, type_args: List[str], args: List[Any]) -> str:
-        """Run the tool asynchronously."""
         try:
-            result: dict[str, Any] = await execute_view_function(function_id=function_id, type_args=type_args, args=args)
+            result: dict[str, Any] = await execute_view_function(function_id=function_id, type_args=_type_args, args=_args)
             return f"View function result: {result}"
         except Exception as e:
             return f"Error executing view function: {str(e)}"
+    
+    async def _arun(self, function_id: str, type_args: Optional[List[str]] = None, args: Optional[List[Any]] = None) -> str:
+        """Run the tool asynchronously."""
+        # Initialize empty lists if None is passed
+        _type_args = type_args if type_args is not None else []
+        _args = args if args is not None else []
+        try:
+            result: dict[str, Any] = await execute_view_function(function_id=function_id, type_args=_type_args, args=_args)
+            return f"View function result: {result}"
+        except Exception as e:
+            return f"Error executing view function: {str(e)}"
+
 def create_aptos_agent(api_key: str | None = None) -> AgentExecutor:
     """Create a LangChain agent that can interact with Aptos blockchain."""
     if api_key is None:
@@ -296,11 +418,11 @@ async def main() -> None:
     
     while True:
         user_input: str = input("\nEnter your message: ")
-        if user_input.lower() in ["exit", "quit"]:
+        if user_input.lower() in {"exit", "quit"}:
             break
         try:
             # The response is a dictionary containing the output
-            response = await agent_executor.ainvoke(input={"input": user_input})
+            response: Dict[str, Any] = await agent_executor.ainvoke(input={"input": user_input})
             print(f"\nAgent response: {response['output']}")
         except Exception as e:
             print(f"Error: {str(e)}")
