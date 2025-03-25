@@ -3,34 +3,43 @@ LangChain agent for interacting with the Aptos blockchain.
 """
 from asyncio.events import AbstractEventLoop
 
-
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.runnables.base import RunnableSerializable
 from langchain_core.agents import AgentAction, AgentFinish
 from langchain_core.prompts.chat import ChatPromptTemplate
 from langchain_openai.chat_models.base import ChatOpenAI
 
-
 from langchain.agents.agent import AgentExecutor
 import os
 import asyncio
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union, Type
 from dotenv import load_dotenv
+import pydantic
+from pydantic import BaseModel, Field, create_model
 
 # LangChain imports
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.tools import BaseTool
+from langchain_core.tools import BaseTool, Tool
+from langchain_core.tools.base import ArgsSchema
 from langchain_openai import ChatOpenAI
 from langchain.agents import AgentExecutor
 from langchain.agents.format_scratchpad import format_to_openai_function_messages
 from langchain.agents.output_parsers import OpenAIFunctionsAgentOutputParser
 from langchain_core.utils.function_calling import convert_to_openai_function
+from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
+from langchain.memory import ConversationBufferMemory
+from langchain_core.prompts import MessagesPlaceholder
 
 # Aptos SDK imports
 from aptos_sdk.account import Account
+from aptos_sdk.account_address import AccountAddress
 from pydantic import SecretStr
+
+# Import Aptos SDK wrapper functions
+# The actual implementations will be available at runtime
 from aptos_sdk_wrapper import (
-    get_balance, fund_wallet, transfer, get_transaction, get_account_resources, execute_view_function, get_account_modules
+    get_balance, fund_wallet, transfer, get_transaction, 
+    get_account_resources, execute_view_function, get_account_modules
 )
 
 # Load environment variables
@@ -40,10 +49,73 @@ load_dotenv()
 agent_wallet: Account = Account.generate()
 agent_address: str = str(agent_wallet.address())
 
+# Helper function to build schema models dynamically
+def build_schema(name: str, **field_definitions) -> Type[BaseModel]:
+    """
+    Dynamically creates a Pydantic model with the given name and field definitions.
+    
+    Args:
+        name: The name of the model to create
+        field_definitions: Field definitions as keyword arguments
+        
+    Returns:
+        A new Pydantic model class
+    """
+    return create_model(name, **field_definitions)
+
+# Dynamically create schema models
+GetBalanceSchema = build_schema(
+    "GetBalanceSchema",
+    address=(Optional[str], Field(None, description="The wallet address to check balance for"))
+)
+
+FundWalletSchema = build_schema(
+    "FundWalletSchema",
+    amount=(int, Field(..., description="Amount of APT to fund (maximum 1000)")),
+    address=(Optional[str], Field(None, description="The wallet address to fund"))
+)
+
+TransferSchema = build_schema(
+    "TransferSchema",
+    receiver=(str, Field(..., description="The wallet address to send to")),
+    amount=(int, Field(..., description="Amount in octas (1 APT = 10^8 octas)"))
+)
+
+GetTransactionSchema = build_schema(
+    "GetTransactionSchema",
+    txn_hash=(str, Field(..., description="The transaction hash to lookup"))
+)
+
+GetResourcesSchema = build_schema(
+    "GetResourcesSchema",
+    address=(Optional[str], Field(None, description="The account address to get resources for"))
+)
+
+GetModulesSchema = build_schema(
+    "GetModulesSchema",
+    address=(Optional[str], Field(None, description="The account address to get modules for")),
+    limit=(int, Field(10, description="Maximum number of modules to return"))
+)
+
+# Define empty list factories
+def empty_str_list() -> List[str]:
+    return []
+
+def empty_any_list() -> List[Any]:
+    return []
+
+ExecuteViewFunctionSchema = build_schema(
+    "ExecuteViewFunctionSchema",
+    function_id=(str, Field(..., description="The full function ID (e.g., '0x1::coin::balance')")),
+    type_args=(List[str], Field(default_factory=empty_str_list, description="List of type arguments for the function")),
+    args=(List[Any], Field(default_factory=empty_any_list, description="List of arguments to pass to the function"))
+)
+
 class GetBalanceTool(BaseTool):
     """Tool for getting the balance of an Aptos wallet."""
-    name = "get_balance"
-    description = "Get the balance of an Aptos wallet"
+    name: str = "get_balance"
+    description: str = "Get the balance of an Aptos wallet"
+    args_schema: Optional[ArgsSchema] = GetBalanceSchema
     
     def _run(self, address: Optional[str] = None) -> str:
         """Run the tool synchronously."""
@@ -61,8 +133,9 @@ class GetBalanceTool(BaseTool):
 
 class FundWalletTool(BaseTool):
     """Tool for funding an Aptos wallet."""
-    name = "fund_wallet"
-    description = "Fund an Aptos wallet with a specified amount of APT"
+    name: str = "fund_wallet"
+    description: str = "Fund an Aptos wallet with a specified amount of APT"
+    args_schema: Optional[ArgsSchema] = FundWalletSchema
     
     def _run(self, amount: int, address: Optional[str] = None) -> str:
         """Run the tool synchronously."""
@@ -82,8 +155,9 @@ class FundWalletTool(BaseTool):
 
 class TransferTool(BaseTool):
     """Tool for transferring APT between wallets."""
-    name = "transfer"
-    description = "Transfer APT from the agent's wallet to another wallet"
+    name: str = "transfer"
+    description: str = "Transfer APT from the agent's wallet to another wallet"
+    args_schema: Optional[ArgsSchema] = TransferSchema
     
     def _run(self, receiver: str, amount: int) -> str:
         """Run the tool synchronously."""
@@ -101,8 +175,9 @@ class TransferTool(BaseTool):
 
 class GetTransactionTool(BaseTool):
     """Tool for getting details about a transaction."""
-    name = "get_transaction"
-    description = "Get details about a transaction using its hash"
+    name: str = "get_transaction"
+    description: str = "Get details about a transaction using its hash"
+    args_schema: Optional[ArgsSchema] = GetTransactionSchema
     
     def _run(self, txn_hash: str) -> str:
         """Run the tool synchronously."""
@@ -119,8 +194,9 @@ class GetTransactionTool(BaseTool):
 
 class GetResourcesTool(BaseTool):
     """Tool for getting account resources."""
-    name = "get_resources"
-    description = "Get the resources associated with an Aptos account"
+    name: str = "get_resources"
+    description: str = "Get the resources associated with an Aptos account"
+    args_schema: Optional[ArgsSchema] = GetResourcesSchema
     
     def _run(self, address: Optional[str] = None) -> str:
         """Run the tool synchronously."""
@@ -145,8 +221,9 @@ class GetResourcesTool(BaseTool):
 
 class GetModulesTool(BaseTool):
     """Tool for getting account modules."""
-    name = "get_modules"
-    description = "Get the modules published by an Aptos account"
+    name: str = "get_modules"
+    description: str = "Get the modules published by an Aptos account"
+    args_schema: Optional[ArgsSchema] = GetModulesSchema
     
     def _run(self, address: Optional[str] = None, limit: int = 10) -> str:
         """Run the tool synchronously."""
@@ -186,8 +263,9 @@ class GetModulesTool(BaseTool):
 
 class ExecuteViewFunctionTool(BaseTool):
     """Tool for executing a view function."""
-    name = "execute_view_function"
-    description = "Execute a Move view function on the Aptos blockchain"
+    name: str = "execute_view_function"
+    description: str = "Execute a Move view function on the Aptos blockchain"
+    args_schema: Optional[ArgsSchema] = ExecuteViewFunctionSchema
     
     def _run(self, function_id: str, type_args: Optional[List[str]] = None, args: Optional[List[Any]] = None) -> str:
         """Run the tool synchronously."""
@@ -204,6 +282,7 @@ class ExecuteViewFunctionTool(BaseTool):
             return f"View function result: {result}"
         except Exception as e:
             return f"Error executing view function: {str(e)}"
+
 def create_aptos_agent(api_key: str | None = None) -> AgentExecutor:
     """Create a LangChain agent that can interact with Aptos blockchain."""
     if api_key is None:
@@ -264,7 +343,7 @@ Aptos Documentation: https://aptos.dev
     ])
     
     # Create the agent
-    agent = (
+    agent: Any = (
         {
             "input": lambda x: x["input"],
             "chat_history": lambda x: x.get("chat_history", []),
