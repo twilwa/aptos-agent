@@ -225,41 +225,64 @@ def create_aptos_agent(api_key: str | None = None) -> AgentExecutor:
         ExecuteViewFunctionTool()
     ]
     
+    # Get user wallet address from environment if available
+    user_wallet_address: Optional[str] = os.getenv("DEVNET_WALLET_ADDRESS")
+    user_wallet_info = f"\nThe user's wallet address is {user_wallet_address}" if user_wallet_address else ""
+    
     # Convert tools to OpenAI functions
     openai_functions: list[dict[str, Any]] = [convert_to_openai_function(function=t) for t in tools]
     
-    # Create prompt
+    # Create prompt with memory
     system_message: str = f"""You are an AI assistant that helps users interact with the Aptos blockchain.
     
-Your wallet address is {agent_address}. You can fund your wallet with APT, check balances, transfer APT, and interact with Aptos smart contracts.
+Your wallet address is {agent_address}. You can fund your wallet with APT, check balances, transfer APT, and interact with Aptos smart contracts.{user_wallet_info}
 
 When users ask about blockchain concepts, explain them clearly.
 When users want to interact with the blockchain, use the appropriate tools.
+When users refer to "my wallet" or "my account", they are referring to their own wallet.
+When a user asks to see their balance, use their wallet address, not yours.
 Always provide clear and helpful responses.
+
+You have memory and can remember previous parts of the conversation. When users refer to previous questions or interactions, use your memory to provide context-aware responses.
 
 Devnet Explorer: https://explorer.aptoslabs.com/?network=devnet
 Aptos Documentation: https://aptos.dev
 """
     
-    prompt: ChatPromptTemplate = ChatPromptTemplate.from_messages(messages=[
+    # Initialize memory with return_messages=True for proper handling in the prompt
+    memory = ConversationBufferMemory(
+        memory_key="chat_history",
+        return_messages=True,
+    )
+    
+    # Create prompt template with chat history
+    prompt = ChatPromptTemplate.from_messages([
         ("system", system_message),
+        MessagesPlaceholder(variable_name="chat_history"),
         ("human", "{input}"),
-        ("ai", "{agent_scratchpad}")
+        MessagesPlaceholder(variable_name="agent_scratchpad"),
     ])
-    # Instead of:
-# runnable | OpenAIFunctionsAgentOutputParser()
+    
     # Create the agent
-    agent: RunnableSerializable[Any, AgentAction | AgentFinish] = (
-        RunnablePassthrough.assign(
-            input=lambda x: x["input"],
-            agent_scratchpad=lambda x: format_to_openai_function_messages(intermediate_steps=x["intermediate_steps"])
-        )
+    agent = (
+        {
+            "input": lambda x: x["input"],
+            "chat_history": lambda x: x.get("chat_history", []),
+            "agent_scratchpad": lambda x: format_to_openai_function_messages(x["intermediate_steps"]),
+        }
         | prompt
         | llm.bind(functions=openai_functions)
         | OpenAIFunctionsAgentOutputParser()
     )
-    # Create the agent executor
-    agent_executor: AgentExecutor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+    
+    # Create agent executor with memory
+    agent_executor = AgentExecutor(
+        agent=agent,
+        tools=tools,
+        memory=memory,
+        verbose=True,
+        return_intermediate_steps=True,
+    )
     
     return agent_executor
 
