@@ -2480,6 +2480,79 @@ Args (the format/field names of the args do not mean anything to the user, so pl
 
 ---
 
+_**User**_
+
+Oh, can you try adding a section to the readme that:
+requirements have been updated for basedpyright, basedmypy, pydantic, pydantic_basedtypes, and users should install the MyPy and basedpyright extensions to their editor? Additionally, let's update to direct users to smith.langchain.com for upgraded tracing. Also, the addition of .cursor/rules should be reviewed for any changes they'd like to make, and they can install the  .specstory extension if they're using the cursor editor and want tto keep track of their history.
+
+Can you do this in a markdown block surrounded by backticks but NOT ```markdown, maybe? I need to get the raw MD out. Let's approach it by adding a section to the end of the readme about the updates we've made, rather than editing the existing file.
+
+---
+
+_**Assistant**_
+
+Here's a section to add to the end of the README.md about the updates we've made:
+
+```
+## Project Updates
+
+### Environment and Development Tools
+
+This project has been updated with improved type checking and development tools:
+
+1. **Updated Requirements:**
+   - Added `pydantic` and `pydantic_basedtypes` for better data validation and type checking
+   - Included support for `basedpyright` and `basedmypy` for enhanced static type analysis
+
+2. **Recommended Extensions:**
+   - **MyPy:** Install the MyPy extension in your editor for real-time type checking
+   - **Basedpyright:** Add the Basedpyright extension for advanced Python type analysis
+   - **.specstory:** If you're using Cursor editor, install the .specstory extension to keep track of your development history
+
+3. **LangChain Integration:**
+   - The agent now uses LangChain for improved agent capabilities
+   - Added conversation memory so the agent remembers previous interactions
+   - Visit [smith.langchain.com](https://smith.langchain.com) for upgraded tracing and debugging
+
+4. **Custom Rules:**
+   - Check the `.cursor/rules` directory to review and modify custom rules for the AI assistant
+   - These rules help tailor the agent's behavior and responses
+
+### Architecture Changes
+
+The project structure has been updated:
+- `langchain_agent.py` replaces the older agent implementation
+- Added proper type annotations throughout the codebase
+- Implemented Pydantic models for tool parameters
+- Enhanced memory capabilities for more natural conversations
+
+To get started with these updates, make sure to install all requirements:
+
+```bash
+pip install -r requirements.txt
+```
+
+And run the agent:
+
+```bash
+python main.py
+```
+```
+
+---
+
+_**User**_
+
+Oh -- I think we need to update @test_setup.py as well, can we take a look at tthat too
+
+---
+
+_**Assistant**_
+
+
+
+---
+
 
 
 ---

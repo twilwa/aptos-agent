@@ -451,3 +451,49 @@ Here are some ideas for next steps:
 2. Explore the [Aptos SDK documentation](https://aptos.dev/en/build/sdks), perhaps try building an agent in a different language and contribute to this open source project?
 3. Join the [Aptos Discord](https://discord.gg/aptoslabs) to connect with other developers.
 4. Let us know you enjoyed this content, tag us and post your experience and thoughts on social media!
+
+---
+
+## Project Updates
+
+### Environment and Development Tools
+
+This project has been updated with improved type checking and development tools:
+
+1. **Updated Requirements:**
+   - Added `pydantic` and `pydantic_basedtypes` for better data validation and type checking
+   - Included support for `basedpyright` and `basedmypy` for enhanced static type analysis
+
+2. **Recommended Extensions:**
+   - **MyPy:** Install the MyPy extension in your editor for real-time type checking
+   - **Basedpyright:** Add the Basedpyright extension for advanced Python type analysis
+   - **.specstory:** If you're using Cursor editor, install the .specstory extension to keep track of your development history
+
+3. **LangChain Integration:**
+   - The agent now uses LangChain for improved agent capabilities
+   - Added conversation memory so the agent remembers previous interactions
+   - Visit [smith.langchain.com](https://smith.langchain.com) for upgraded tracing and debugging
+
+4. **Custom Rules:**
+   - Check the `.cursor/rules` directory to review and modify custom rules for the AI assistant if you're using the Cursor editor.
+   - These rules help tailor the IDE agent's behavior and responses
+
+### Architecture Changes
+
+The project structure has been updated:
+- `langchain_agent.py` replaces the older agent implementation
+- Added proper type annotations throughout the codebase
+- Implemented Pydantic models for tool parameters
+- Enhanced memory capabilities for more natural conversations
+
+To get started with these updates, make sure to install all requirements:
+
+```bash
+pip install -r requirements.txt
+```
+
+And run the agent:
+
+```bash
+python main.py
+```
