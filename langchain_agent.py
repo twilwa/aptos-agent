@@ -12,10 +12,10 @@ from langchain_openai.chat_models.base import ChatOpenAI
 from langchain.agents.agent import AgentExecutor
 import os
 import asyncio
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union, Type
 from dotenv import load_dotenv
 import pydantic
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, create_model
 
 # LangChain imports
 from langchain_core.prompts import ChatPromptTemplate
@@ -49,8 +49,67 @@ load_dotenv()
 agent_wallet: Account = Account.generate()
 agent_address: str = str(agent_wallet.address())
 
-class GetBalanceSchema(BaseModel):
-    address: Optional[str] = Field(None, description="The wallet address to check balance for")
+# Helper function to build schema models dynamically
+def build_schema(name: str, **field_definitions) -> Type[BaseModel]:
+    """
+    Dynamically creates a Pydantic model with the given name and field definitions.
+    
+    Args:
+        name: The name of the model to create
+        field_definitions: Field definitions as keyword arguments
+        
+    Returns:
+        A new Pydantic model class
+    """
+    return create_model(name, **field_definitions)
+
+# Dynamically create schema models
+GetBalanceSchema = build_schema(
+    "GetBalanceSchema",
+    address=(Optional[str], Field(None, description="The wallet address to check balance for"))
+)
+
+FundWalletSchema = build_schema(
+    "FundWalletSchema",
+    amount=(int, Field(..., description="Amount of APT to fund (maximum 1000)")),
+    address=(Optional[str], Field(None, description="The wallet address to fund"))
+)
+
+TransferSchema = build_schema(
+    "TransferSchema",
+    receiver=(str, Field(..., description="The wallet address to send to")),
+    amount=(int, Field(..., description="Amount in octas (1 APT = 10^8 octas)"))
+)
+
+GetTransactionSchema = build_schema(
+    "GetTransactionSchema",
+    txn_hash=(str, Field(..., description="The transaction hash to lookup"))
+)
+
+GetResourcesSchema = build_schema(
+    "GetResourcesSchema",
+    address=(Optional[str], Field(None, description="The account address to get resources for"))
+)
+
+GetModulesSchema = build_schema(
+    "GetModulesSchema",
+    address=(Optional[str], Field(None, description="The account address to get modules for")),
+    limit=(int, Field(10, description="Maximum number of modules to return"))
+)
+
+# Define empty list factories
+def empty_str_list() -> List[str]:
+    return []
+
+def empty_any_list() -> List[Any]:
+    return []
+
+ExecuteViewFunctionSchema = build_schema(
+    "ExecuteViewFunctionSchema",
+    function_id=(str, Field(..., description="The full function ID (e.g., '0x1::coin::balance')")),
+    type_args=(List[str], Field(default_factory=empty_str_list, description="List of type arguments for the function")),
+    args=(List[Any], Field(default_factory=empty_any_list, description="List of arguments to pass to the function"))
+)
 
 class GetBalanceTool(BaseTool):
     """Tool for getting the balance of an Aptos wallet."""
@@ -71,10 +130,6 @@ class GetBalanceTool(BaseTool):
             return f"Balance for {target_address}: {balance/10**8} APT"
         except Exception as e:
             return f"Error getting balance: {str(e)}"
-
-class FundWalletSchema(BaseModel):
-    amount: int = Field(..., description="Amount of APT to fund (maximum 1000)")
-    address: Optional[str] = Field(None, description="The wallet address to fund")
 
 class FundWalletTool(BaseTool):
     """Tool for funding an Aptos wallet."""
@@ -98,10 +153,6 @@ class FundWalletTool(BaseTool):
         except Exception as e:
             return f"Error funding wallet: {str(e)}"
 
-class TransferSchema(BaseModel):
-    receiver: str = Field(..., description="The wallet address to send to")
-    amount: int = Field(..., description="Amount in octas (1 APT = 10^8 octas)")
-
 class TransferTool(BaseTool):
     """Tool for transferring APT between wallets."""
     name: str = "transfer"
@@ -122,9 +173,6 @@ class TransferTool(BaseTool):
         except Exception as e:
             return f"Error transferring funds: {str(e)}"
 
-class GetTransactionSchema(BaseModel):
-    txn_hash: str = Field(..., description="The transaction hash to lookup")
-
 class GetTransactionTool(BaseTool):
     """Tool for getting details about a transaction."""
     name: str = "get_transaction"
@@ -143,9 +191,6 @@ class GetTransactionTool(BaseTool):
             return f"Transaction details: {result}"
         except Exception as e:
             return f"Error getting transaction: {str(e)}"
-
-class GetResourcesSchema(BaseModel):
-    address: Optional[str] = Field(None, description="The account address to get resources for")
 
 class GetResourcesTool(BaseTool):
     """Tool for getting account resources."""
@@ -173,10 +218,6 @@ class GetResourcesTool(BaseTool):
             return summary
         except Exception as e:
             return f"Error getting account resources: {str(e)}"
-
-class GetModulesSchema(BaseModel):
-    address: Optional[str] = Field(None, description="The account address to get modules for")
-    limit: int = Field(10, description="Maximum number of modules to return")
 
 class GetModulesTool(BaseTool):
     """Tool for getting account modules."""
@@ -219,11 +260,6 @@ class GetModulesTool(BaseTool):
             return summary
         except Exception as e:
             return f"Error getting account modules: {str(e)}"
-
-class ExecuteViewFunctionSchema(BaseModel):
-    function_id: str = Field(..., description="The full function ID (e.g., '0x1::coin::balance')")
-    type_args: List[str] = Field(default_factory=list, description="List of type arguments for the function")
-    args: List[Any] = Field(default_factory=list, description="List of arguments to pass to the function")
 
 class ExecuteViewFunctionTool(BaseTool):
     """Tool for executing a view function."""
@@ -307,7 +343,7 @@ Aptos Documentation: https://aptos.dev
     ])
     
     # Create the agent
-    agent = (
+    agent: Any = (
         {
             "input": lambda x: x["input"],
             "chat_history": lambda x: x.get("chat_history", []),

@@ -2549,6 +2549,183 @@ Oh -- I think we need to update @test_setup.py as well, can we take a look at tt
 
 _**Assistant**_
 
+Looking at the `test_setup.py` file, I see that it needs to be updated to work with our new LangChain implementation instead of the old `agents.py` module. The file currently tests both OpenAI API connectivity and Aptos blockchain connectivity, but the Aptos test is using a function from the old implementation.
+
+Let me create an updated version of `test_setup.py` that works with our new LangChain agent implementation:
+
+```python
+import os
+from dotenv import load_dotenv
+import openai
+import asyncio
+
+load_dotenv()
+
+def test_openai_connection():
+    """Test OpenAI API connection"""
+    try:
+        openai.api_key = os.getenv('OPENAI_API_KEY')
+        response = openai.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": "Say hello!"}]
+        )
+        print("OpenAI Connection Test:", response.choices[0].message.content)
+        return True
+    except Exception as e:
+        print(f"OpenAI Connection Error: {str(e)}")
+        return False
+
+async def test_aptos_connection_async():
+    """Test Aptos connection asynchronously"""
+    from aptos_sdk_wrapper import get_balance
+    from aptos_sdk.account import Account
+    
+    try:
+        # Generate a test account
+        test_account = Account.generate()
+        address = str(test_account.address())
+        
+        # Try to get balance
+        balance = await get_balance(wallet_address=address)
+        print(f"Aptos Connection Test - Balance: {balance/10**8} APT")
+        return True
+    except Exception as e:
+        print(f"Aptos Connection Error: {str(e)}")
+        return False
+
+def test_aptos_connection():
+    """Test Aptos connection (synchronous wrapper)"""
+    return asyncio.run(test_aptos_connection_async())
+
+def test_langchain_setup():
+    """Test LangChain setup"""
+    try:
+        from langchain_openai import ChatOpenAI
+        from langchain.agents import AgentExecutor
+        from langchain_agent import create_aptos_agent
+        
+        # Just test imports, don't actually create the agent
+        print("LangChain imports successful")
+        return True
+    except Exception as e:
+        print(f"LangChain Setup Error: {str(e)}")
+        return False
+
+if __name__ == "__main__":
+    print("Testing connections...")
+    openai_ok = test_openai_connection()
+    aptos_ok = test_aptos_connection()
+    langchain_ok = test_langchain_setup()
+    
+    if openai_ok and aptos_ok and langchain_ok:
+        print("\n✅ All connections successful!")
+    else:
+        print("\n❌ Some connections failed. Check errors above.")
+```
+
+This updated version:
+
+1. Tests the OpenAI API connection as before
+2. Directly uses the `get_balance` function from `aptos_sdk_wrapper.py` instead of going through the old agents module
+3. Adds a new test for LangChain setup to ensure those imports are working
+4. Uses async/await pattern correctly with the Aptos SDK
+
+This should work with our new implementation and provide a good initial connectivity test before running the full agent.
+
+---
+
+_**User**_
+
+issue (complexity): Consider using a helper function or base model to dynamically create the Pydantic schemas, reducing code duplication while maintaining validation and type hints, as demonstrated with Pydantic's create_model function to build schemas dynamically, instead of defining each one manually..
+
+The code now creates many almost‐identical Pydantic schemas. This repetition can be reduced by dynamically creating these schemas using a helper function (or by factoring common fields into a base model) without losing validation or type hints.
+
+For example, you can use Pydantic’s dynamic model creation via create_model:
+
+from pydantic import BaseModel, Field, create_model
+from typing import Optional, List, Any
+
+def build_schema(name: str, field_definitions: dict) -> BaseModel:
+    return create_model(name, **field_definitions)
+
+# Instead of defining GetBalanceSchema manually:
+GetBalanceSchema = build_schema(
+    "GetBalanceSchema",
+    address=(Optional[str], Field(None, description="The wallet address to check balance for"))
+)
+
+FundWalletSchema = build_schema(
+    "FundWalletSchema",
+    amount=(int, Field(..., description="Amount of APT to fund (maximum 1000)")),
+    address=(Optional[str], Field(None, description="The wallet address to fund"))
+)
+
+TransferSchema = build_schema(
+    "TransferSchema",
+    receiver=(str, Field(..., description="The wallet address to send to")),
+    amount=(int, Field(..., description="Amount in octas (1 APT = 10^8 octas)"))
+)
+
+GetTransactionSchema = build_schema(
+    "GetTransactionSchema",
+    txn_hash=(str, Field(..., description="The transaction hash to lookup"))
+)
+
+GetResourcesSchema = build_schema(
+    "GetResourcesSchema",
+    address=(Optional[str], Field(None, description="The account address to get resources for"))
+)
+
+GetModulesSchema = build_schema(
+    "GetModulesSchema",
+    address=(Optional[str], Field(None, description="The account address to get modules for")),
+    limit=(int, Field(10, description="Maximum number of modules to return"))
+)
+
+ExecuteViewFunctionSchema = build_schema(
+    "ExecuteViewFunctionSchema",
+    function_id=(str, Field(..., description="The full function ID (e.g., '0x1::coin::balance')")),
+    type_args=(List[str], Field(default_factory=list, description="List of type arguments for the function")),
+    args=(List[Any], Field(default_factory=list, description="List of arguments to pass to the function"))
+)
+This keeps all functionality while reducing the boilerplate. You can then plug these schemas into your Tool definitions as before.
+
+@twilwa	Reply...
+aptos_sdk_wrapper.py
+Outdated
+aptos_sdk_wrapper.py
+Comment on lines 303 to +307
+        if isinstance(function_abi, dict) and "params" in function_abi:
+            if "params" in function_abi:
+                params: Any | list[Any] = function_abi["params"]
+                params = function_abi["params"]
+                if isinstance(params, list):
+                    expected_params: list[str] = params
+                    expected_params = params
+Contributor
+@sourcery-ai sourcery-ai bot 2 minutes ago
+suggestion (code-quality): Merge nested if conditions (merge-nested-ifs)
+
+Suggested change
+        if isinstance(function_abi, dict) and "params" in function_abi:
+            if "params" in function_abi:
+                params: Any | list[Any] = function_abi["params"]
+                params = function_abi["params"]
+                if isinstance(params, list):
+                    expected_params: list[str] = params
+                    expected_params = params
+        if isinstance(function_abi, dict) and "params" in function_abi and "params" in function_abi:
+            params = function_abi["params"]
+            if isinstance(params, list):
+                expected_params = params
+
+
+some final fixes
+
+---
+
+_**Assistant**_
+
 
 
 ---

@@ -299,20 +299,10 @@ async def execute_entry_function(
         print(f"Provided Type Arguments: {type_args}")
 
         # ✅ Step 4: Extract required parameters from ABI
-        expected_params = []
-        if isinstance(function_abi, dict) and "params" in function_abi:
-            if "params" in function_abi:
-                params = function_abi["params"]
-                if isinstance(params, list):
-                    expected_params = params
-            
+        expected_params = get_expected_params(function_abi)
+
         print(f"Expected Parameters: {expected_params}")
         print(f"Args: {args}")
-
-        # Ensure the signer (`&signer`) is NOT passed in `args`
-        if expected_params and len(expected_params) > 0 and expected_params[0] == "&signer":
-            expected_params = expected_params[1:]  # Remove signer from expected params
-            print("Automatically handling signer argument")
 
         # ✅ Step 5: Validate the number of arguments
         # if len(args) != len(expected_params):
@@ -366,3 +356,26 @@ async def execute_entry_function(
     except Exception as e:
         print(f"Error Details: {e}")  # Debugging output
         return {"error": f"Error executing entry function: {str(e)}"}
+
+def get_expected_params(function_abi: dict[str, Any]) -> list[str]:
+    """
+    Extract expected parameters from function ABI.
+    
+    Args:
+        function_abi: Function ABI dictionary
+        
+    Returns:
+        List of expected parameter types
+    """
+    expected_params: list[str] = []
+    if isinstance(function_abi, dict) and "params" in function_abi:
+        params: Any = function_abi["params"]
+        if isinstance(params, list):
+            expected_params = params
+    
+    # Ensure the signer (`&signer`) is NOT included in expected params
+    if expected_params and len(expected_params) > 0 and expected_params[0] == "&signer":
+        expected_params = expected_params[1:]  # Remove signer from expected params
+        print("Automatically handling signer argument")
+    
+    return expected_params
