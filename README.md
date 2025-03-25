@@ -13,7 +13,7 @@ In 2024, projects like **Freysa** showcased an AI defending a blockchain account
 > [!NOTE]  
 > We use Python in this tutorial but you should be able to complete this tutorial without any Python experience.
 
-By connecting GPT-4o to Aptos’s Move smart contracts and Python’s aptos-sdk, we’re building an agent that:
+By connecting gpt-4o to Aptos’s Move smart contracts and Python’s aptos-sdk, we’re building an agent that:
 
 - **Understands** your instructions in everyday language.
 - **Interacts** with your on-chain resources (e.g., deploying tokens, querying data).

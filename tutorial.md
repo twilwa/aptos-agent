@@ -205,7 +205,7 @@ def close_event_loop():
 
 aptos_agent = Agent(
     name="Aptos Agent",
-    model="gpt-4o",
+    model="gpt-4oo",
     api_key=os.getenv('OPENAI_API_KEY'),
     instructions=(
         "You are a helpful agent that understands the Aptos Layer 1 blockchain. "
@@ -279,4 +279,4 @@ deactivate
 > 💡 **Troubleshooting Tips**:
 > - If you see OpenAI API errors, check your `.env` file
 > - If Python version errors occur, verify you're using 3.11
-> - GPT-4 warnings are normal in test mode
+> - gpt-4o warnings are normal in test mode

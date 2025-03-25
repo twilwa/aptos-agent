@@ -166,7 +166,7 @@ Now let's create our agent's core files:
     # Initialize the agent
     aptos_agent = Agent(
         name="Aptos Agent",
-        model="gpt-4",
+        model="gpt-4o",
         api_key=os.getenv('OPENAI_API_KEY'),
         instructions=(
             "You are a helpful agent that can interact with the Aptos blockchain. "

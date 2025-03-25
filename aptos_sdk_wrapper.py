@@ -171,14 +171,14 @@ async def get_account_resources(address: str) -> list[dict[str, Any]]:
 async def get_token_balance(address: str | AccountAddress, creator_address: str, collection_name: str, token_name: str) -> dict[str, Any]:
     """Gets the token balance for a specific token."""
     try:
-        account_address: AccountAddress
+        address_obj: AccountAddress
         if isinstance(address, str):
-            account_address: AccountAddress = AccountAddress.from_str(address)
+            address_obj = AccountAddress.from_str(address)
         else:
-            account_address: AccountAddress = address
+            address_obj = address
         
         # Use account_resources instead of get_account_resources
-        resources: list[dict[str, Any]] = await rest_client.account_resources(account_address)
+        resources: list[dict[str, Any]] = await rest_client.account_resources(address_obj)
         for resource in resources:
             if resource['type'] == '0x3::token::TokenStore':
                 # Parse token data to find specific token balance
