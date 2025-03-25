@@ -104,7 +104,7 @@ async def execute_view_function(function_id: str, type_args: list[str], args: li
     except requests.exceptions.RequestException as e:
         return {"error": f"Error executing view function: {str(e)}"}
 
-async def fund_wallet(wallet_address: str | AccountAddress, amount: float) -> Any:
+async def fund_wallet(wallet_address: str | AccountAddress, amount: int) -> AccountAddress:
     """Funds a wallet with a specified amount of APT."""
     print(f"Funding wallet: {wallet_address} with {amount} APT")
 <<<<<<< ours
@@ -117,41 +117,38 @@ async def fund_wallet(wallet_address: str | AccountAddress, amount: float) -> An
     if amount > 1000:
         raise ValueError(
             "Amount too large. Please specify an amount less than 1000 APT")
-    
-    octas: int = int(amount * 10**8)  # Convert from APT to octas
-    
+    octas: int = amount * 10**8  # Convert APT to octas
     account_address: AccountAddress
     if isinstance(wallet_address, str):
         account_address: AccountAddress = AccountAddress.from_str(address=wallet_address)
     else:
-        account_address = wallet_address
+        account_address: AccountAddress = wallet_address
     txn_hash: Any = await faucet_client.fund_account(address=account_address, amount=octas)
     print(f"Transaction hash: {txn_hash}\nFunded wallet: {wallet_address}")
     return account_address
-
 async def get_balance(wallet_address: str | AccountAddress) -> int:
-    """Gets the balance of a wallet in octas."""
+    """Retrieves the balance of a specified wallet."""
+    print(f"Getting balance for wallet: {wallet_address}")
     account_address: AccountAddress
     if isinstance(wallet_address, str):
-        account_address = AccountAddress.from_str(address=wallet_address)
+        account_address: AccountAddress = AccountAddress.from_str(address=wallet_address)
     else:
-        account_address = wallet_address
+        account_address: AccountAddress = wallet_address
     balance: int = await rest_client.account_balance(account_address=account_address)
     balance_in_apt: float = balance / 10**8  # Convert octas to APT
     print(f"Wallet balance: {balance_in_apt:.2f} APT")
     return balance
 
 async def transfer(sender: Account, receiver: str | AccountAddress, amount: int) -> str:
-    """Transfers APT from one wallet to another."""
+    """Transfers a specified amount from sender to receiver."""
     receiver_address: AccountAddress
     if isinstance(receiver, str):
-        receiver_address = AccountAddress.from_str(address=receiver)
+        receiver_address: AccountAddress = AccountAddress.from_str(address=receiver)
     else:
-        receiver_address = receiver
+        receiver_address: AccountAddress = receiver
     txn_hash: Any = await rest_client.bcs_transfer(sender=sender, recipient=receiver_address, amount=amount)
     print(f"Transaction hash: {txn_hash} and receiver: {receiver}")
     return txn_hash
-
 async def get_transaction(txn_hash: str) -> dict[str, Any]:
     """Gets details about a specific transaction."""
     try:
@@ -161,21 +158,21 @@ async def get_transaction(txn_hash: str) -> dict[str, Any]:
         print(f"Full error: {str(e)}")
         return {"error": f"Error getting transaction: {str(e)}"}
 
-async def get_account_resources(address: str | AccountAddress, limit: int = 100) -> list[dict[str, Any]]:
-    """Gets resources for a specific account."""
+async def get_account_resources(address: str) -> list[dict[str, Any]]:
+    """Gets all resources associated with an account using direct API call."""
+    node_url = "https://api.devnet.aptoslabs.com/v1"  # Update for the correct network
     try:
-        # Fix variable redefinition issue
-        if isinstance(address, str):
-            processed_address = AccountAddress.from_str(address)
-        else:
-            processed_address = address
-        
-        # Use account_resources instead of get_account_resources
-        resources: list[dict[str, Any]] = await rest_client.account_resources(processed_address)
-        return resources[:limit] if limit > 0 else resources
-    except Exception as e:
-        print(f"Error in get_account_resources: {e}")
-        return [{"error": str(e)}]
+        # Use direct API call to fetch resources
+        url: str = f"{node_url}/accounts/{address}/resources"
+        response: Response = requests.get(url)
+        response.raise_for_status()  # Raise an exception for HTTP errors
+
+        resources = response.json()
+        if not resources:
+            return [{"error": "No resources found for this account"}]
+        return resources
+    except requests.exceptions.RequestException as e:
+        return [{"error": f"Error getting account resources: {str(e)}"}]
 
 async def get_token_balance(address: str | AccountAddress, creator_address: str, collection_name: str, token_name: str) -> dict[str, Any]:
     """Gets the token balance for a specific token."""
@@ -221,106 +218,6 @@ async def create_token(sender: Account, name: str, symbol: str, icon_uri: str,
     txn_hash: str = await rest_client.submit_bcs_transaction(signed_transaction)
     print(f"Transaction hash: {txn_hash}")
     return txn_hash
-
-def get_function_abi(abi_cache: list[dict[str, Any]] | None, module_name: str, function_name: str) -> dict[str, Any] | None:
-    """
-    Extract function ABI from the module cache.
-    
-    Args:
-        abi_cache: List of module ABIs from get_account_modules
-        module_name: Name of the module containing the function
-        function_name: Name of the function to look up
-        
-    Returns:
-        Function ABI dictionary or None if not found
-    """
-    if abi_cache is None:
-        return None
-        
-    for module in abi_cache:
-        if "abi" in module and isinstance(module["abi"], dict):
-            abi: dict[Any, Any] = module["abi"]
-            if "name" in abi and abi["name"] == module_name:
-                if "exposed_functions" in abi and isinstance(abi["exposed_functions"], list):
-                    for func in abi["exposed_functions"]:
-                        if "name" in func and func["name"] == function_name:
-                            return func
-    return None
-
-def get_expected_type_args(function_abi: dict[str, Any]) -> list[str]:
-    """
-    Extract expected type arguments from function ABI.
-    
-    Args:
-        function_abi: Function ABI dictionary
-        
-    Returns:
-        List of expected type arguments
-    """
-    expected_type_args: list[str] = []
-    if isinstance(function_abi, dict) and "generic_type_params" in function_abi:
-        params: list[Any] = function_abi["generic_type_params"]
-        if isinstance(params, list):
-            expected_type_args = params
-    return expected_type_args
-
-def get_expected_params(function_abi: dict[str, Any]) -> list[str]:
-    """
-    Extract expected parameters from function ABI.
-    
-    Args:
-        function_abi: Function ABI dictionary
-        
-    Returns:
-        List of expected parameter types
-    """
-    expected_params: list[str] = []
-    if isinstance(function_abi, dict) and "params" in function_abi:
-        params: Any | list[Any] = function_abi["params"]
-        if isinstance(params, list):
-            expected_params = params
-    
-    # Ensure the signer (`&signer`) is NOT included in expected params
-    if expected_params and len(expected_params) > 0 and expected_params[0] == "&signer":
-        expected_params = expected_params[1:]  # Remove signer from expected params
-        print("Automatically handling signer argument")
-    
-    return expected_params
-
-def serialize_arguments(expected_params: list[str], args: list[Any]) -> list[TransactionArgument] | dict[str, str]:
-    """
-    Serialize arguments based on their expected types from the ABI.
-    
-    Args:
-        expected_params: List of parameter types from the ABI
-        args: List of argument values to serialize
-        
-    Returns:
-        List of serialized TransactionArgument objects or error dict
-    """
-    serialized_args: list[TransactionArgument] = []
-    for i, arg in enumerate(args):
-        # Don't go above the expected parameters
-        if i >= len(expected_params):
-            break
-        param_type: str = expected_params[i]
-
-        if param_type == "u64":
-            serialized_args.append(TransactionArgument(value=int(arg), encoder=Serializer.u64))
-        elif param_type.startswith("0x"):  # Assume it's an address
-            serialized_args.append(TransactionArgument(value=arg, encoder=Serializer.str))
-        elif param_type == "bool":
-            serialized_args.append(TransactionArgument(value=bool(arg), encoder=Serializer.bool))
-        elif param_type.startswith("vector<"):  # Handle vector types
-            if not isinstance(arg, list):
-                return {"error": f"Expected a list for `{param_type}` but got {type(arg).__name__}"}
-            # Use a single encoder for vectors rather than a list of encoders
-            serialized_args.append(TransactionArgument(value=arg, encoder=Serializer.str))
-        else:
-            serialized_args.append(TransactionArgument(value=arg, encoder=Serializer.str))
-    
-    return serialized_args
-
 async def execute_entry_function(
     sender: Account, 
     function_id: str, 
@@ -345,25 +242,12 @@ async def execute_entry_function(
     """
 
     try:
-        # ✅ Split function_id into address, module, and function
-        parts: list[str] = function_id.split("::")
-        if len(parts) != 3:
-            return {"error": f"Invalid function_id format: {function_id}. Expected format: address::module::function"}
-        
-        addr_str, module_name, function_name = parts
-        
-        # ✅ If we have no ABI cache but optional_fetch_abi is True, fetch it
-        if abi_cache is None and optional_fetch_abi:
-            try:
-                abi_response: dict[str, Any] = await get_account_modules(address=addr_str)
-                if "error" in abi_response:
-                    return {"error": f"Failed to fetch ABI: {abi_response['error']}"}
-                abi_cache = abi_response.get("modules", [])
-            except Exception as e:
-                return {"error": f"Failed to fetch ABI: {str(e)}"}
-        
+        # Extract the module address and module name
+        module_path, function_name = function_id.rsplit(sep="::", maxsplit=1)
+        module_address, module_name = module_path.split(sep="::", maxsplit=1)
+
         if not type_args:
-            type_args = []
+            type_args: list[str] = []
         
         # ✅ Step 1: Check if ABI is available in cache
 <<<<<<< ours
@@ -586,26 +470,28 @@ async def execute_entry_function(
 >>>>>>> theirs
 
         print(f"Serialized Arguments: {serialized_args}")  # Debugging output
+
+        # ✅ Step 7: Execute the function with the dynamically determined shape
+        # Convert type_args to the expected TypeTag objects
+        converted_type_args: list[TypeTag] = [TypeTag(t) for t in type_args]
         
-        # Convert string type arguments to TypeTag objects
-        converted_type_args = [TypeTag(t) for t in type_args]
-        
-        # Use the existing natural method pattern from the code
-        payload = EntryFunction.natural(
-            module=f"{addr_str}::{module_name}", 
-            function=function_name,
-            ty_args=converted_type_args,
-            args=serialized_args
+        payload: EntryFunction = EntryFunction.natural(
+            module_path,
+            function_name,
+            converted_type_args,  # Correctly determined type arguments
+            serialized_args,  # Correctly formatted function parameters
         )
-        
-        # Create the transaction payload and submit
-        signed_transaction = await rest_client.create_bcs_signed_transaction(
+
+        # ✅ Create and sign the transaction correctly
+        signed_transaction: SignedTransaction = await rest_client.create_bcs_signed_transaction(
             sender, payload=TransactionPayload(payload)
         )
-        
-        txn_hash = await rest_client.submit_bcs_transaction(signed_transaction)
+
+        # ✅ Submit the transaction and return txn hash
+        txn_hash: str = await rest_client.submit_bcs_transaction(signed_transaction)
+        print(f"Transaction submitted successfully! Txn Hash: {txn_hash}")
         return {"txn_hash": txn_hash}
-    
+
     except Exception as e:
-        print(f"Error executing entry function: {e}")
-        return {"error": str(e)}
+        print(f"Error Details: {e}")  # Debugging output
+        return {"error": f"Error executing entry function: {str(e)}"}
