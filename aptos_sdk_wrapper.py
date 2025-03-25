@@ -107,48 +107,44 @@ async def execute_view_function(function_id: str, type_args: list[str], args: li
 async def fund_wallet(wallet_address: str | AccountAddress, amount: int) -> AccountAddress:
     """Funds a wallet with a specified amount of APT."""
     print(f"Funding wallet: {wallet_address} with {amount} APT")
-<<<<<<< ours
-    amount: int = amount
-||||||| ancestor
-    amount: int = int(amount)
-=======
     amount = int(amount)
->>>>>>> theirs
     if amount > 1000:
         raise ValueError(
             "Amount too large. Please specify an amount less than 1000 APT")
     octas: int = amount * 10**8  # Convert APT to octas
     account_address: AccountAddress
     if isinstance(wallet_address, str):
-        account_address: AccountAddress = AccountAddress.from_str(address=wallet_address)
+        account_address = AccountAddress.from_str(address=wallet_address)
     else:
-        account_address: AccountAddress = wallet_address
+        account_address = wallet_address
     txn_hash: Any = await faucet_client.fund_account(address=account_address, amount=octas)
     print(f"Transaction hash: {txn_hash}\nFunded wallet: {wallet_address}")
     return account_address
+
 async def get_balance(wallet_address: str | AccountAddress) -> int:
     """Retrieves the balance of a specified wallet."""
     print(f"Getting balance for wallet: {wallet_address}")
-    account_address: AccountAddress
+    address_obj: AccountAddress
     if isinstance(wallet_address, str):
-        account_address: AccountAddress = AccountAddress.from_str(address=wallet_address)
+        address_obj = AccountAddress.from_str(address=wallet_address)
     else:
-        account_address: AccountAddress = wallet_address
-    balance: int = await rest_client.account_balance(account_address=account_address)
+        address_obj = wallet_address
+    balance: int = await rest_client.account_balance(account_address=address_obj)
     balance_in_apt: float = balance / 10**8  # Convert octas to APT
     print(f"Wallet balance: {balance_in_apt:.2f} APT")
     return balance
 
 async def transfer(sender: Account, receiver: str | AccountAddress, amount: int) -> str:
     """Transfers a specified amount from sender to receiver."""
-    receiver_address: AccountAddress
+    target_address: AccountAddress
     if isinstance(receiver, str):
-        receiver_address: AccountAddress = AccountAddress.from_str(address=receiver)
+        target_address = AccountAddress.from_str(address=receiver)
     else:
-        receiver_address: AccountAddress = receiver
-    txn_hash: Any = await rest_client.bcs_transfer(sender=sender, recipient=receiver_address, amount=amount)
+        target_address = receiver
+    txn_hash: Any = await rest_client.bcs_transfer(sender=sender, recipient=target_address, amount=amount)
     print(f"Transaction hash: {txn_hash} and receiver: {receiver}")
     return txn_hash
+
 async def get_transaction(txn_hash: str) -> dict[str, Any]:
     """Gets details about a specific transaction."""
     try:
@@ -218,6 +214,7 @@ async def create_token(sender: Account, name: str, symbol: str, icon_uri: str,
     txn_hash: str = await rest_client.submit_bcs_transaction(signed_transaction)
     print(f"Transaction hash: {txn_hash}")
     return txn_hash
+
 async def execute_entry_function(
     sender: Account, 
     function_id: str, 
@@ -247,40 +244,39 @@ async def execute_entry_function(
         module_address, module_name = module_path.split(sep="::", maxsplit=1)
 
         if not type_args:
-            type_args: list[str] = []
+            type_args = []
         
         # ✅ Step 1: Check if ABI is available in cache
-<<<<<<< ours
-        function_abi: None = None
+        function_abi = None
         if abi_cache is not None:
             print(f"Using cached ABI for module: {module_address}::{module_name}")
             for module in abi_cache:
                 if "abi" in module and isinstance(module["abi"], dict):
-                    abi: dict[Any, Any] = module["abi"]
-                    if "name" in abi and abi["name"] == module_name and ("exposed_functions" in abi and isinstance(abi["exposed_functions"], list)):
-                        for func in abi["exposed_functions"]:
+                    module_abi = module["abi"]
+                    if "name" in module_abi and module_abi["name"] == module_name and ("exposed_functions" in module_abi and isinstance(module_abi["exposed_functions"], list)):
+                        for func in module_abi["exposed_functions"]:
                             if "name" in func and func["name"] == function_name:
-                                function_abi: Any | None = func
+                                function_abi = func
                                 break
 
 
         # ✅ Step 2: If ABI is not cached, decide whether to fetch
         if not function_abi and optional_fetch_abi:
             print(f"Fetching ABI for module: {module_address}::{module_name}")
-            abi_data: dict[str, Any] = await get_account_modules(address=module_address)
+            abi_data = await get_account_modules(address=module_address)
 
             if "modules" in abi_data and isinstance(abi_data["modules"], list):
                 # Cache ABI for future calls
-                module_list: list[Any] = abi_data["modules"]
+                module_list = abi_data["modules"]
                 
                 # Find function in the new ABI data
                 for module in module_list:
                     if "abi" in module and isinstance(module["abi"], dict):
-                        abi: dict[Any, Any] = module["abi"]
-                        if "name" in abi and abi["name"] == module_name and ("exposed_functions" in abi and isinstance(abi["exposed_functions"], list)):
-                            for func in abi["exposed_functions"]:
+                        module_abi = module["abi"]
+                        if "name" in module_abi and module_abi["name"] == module_name and ("exposed_functions" in module_abi and isinstance(module_abi["exposed_functions"], list)):
+                            for func in module_abi["exposed_functions"]:
                                 if "name" in func and func["name"] == function_name:
-                                    function_abi: Any | None = func
+                                    function_abi = func
                                     break
 
 
@@ -289,105 +285,12 @@ async def execute_entry_function(
             return {"error": f"Function `{function_id}` not found in ABI"}
 
         # ✅ Step 3: Extract generic type parameters (if required)
-        expected_type_args: list[str] = []
-        if isinstance(function_abi, dict) and "generic_type_params" in function_abi and "generic_type_params" in function_abi:
-            params: list[Any] = function_abi["generic_type_params"]
-            if isinstance(params, list):
-                expected_type_args: list[str] = params
-
-            
-        if expected_type_args and not type_args:
-            return {"error": f"Missing required type arguments for `{function_id}`"}
-
-        print(f"Expected Type Arguments: {expected_type_args}")
-        print(f"Provided Type Arguments: {type_args}")
-
-        # ✅ Step 4: Extract required parameters from ABI
-        expected_params: list[str] = []
-        if isinstance(function_abi, dict) and "params" in function_abi:
-            if "params" in function_abi:
-                params: Any | list[Any] = function_abi["params"]
-                if isinstance(params, list):
-                    expected_params: list[str] = params
-            
-        print(f"Expected Parameters: {expected_params}")
-        print(f"Args: {args}")
-
-        # Ensure the signer (`&signer`) is NOT passed in `args`
-        if expected_params and len(expected_params) > 0 and expected_params[0] == "&signer":
-            expected_params: list[str] = expected_params[1:]  # Remove signer from expected params
-            print("Automatically handling signer argument")
-
-        # ✅ Step 5: Validate the number of arguments
-        # if len(args) != len(expected_params):
-        #     return {"error": f"Argument mismatch: expected {len(expected_params)}, got {len(args)}"}
-
-        # ✅ Step 6: Serialize arguments correctly based on ABI types
-        serialized_args: list[TransactionArgument] = []
-        for i, arg in enumerate(args):
-            # don't go above the expected parameters
-            if i >= len(expected_params):
-                break
-            param_type: str = expected_params[i]
-
-            if param_type == "u64":
-                serialized_args.append(TransactionArgument(value=int(arg), encoder=Serializer.u64))
-            elif param_type.startswith("0x"):  # Assume it's an address
-                serialized_args.append(TransactionArgument(value=arg, encoder=Serializer.str))
-            elif param_type == "bool":
-                serialized_args.append(TransactionArgument(value=bool(arg), encoder=Serializer.bool))
-            elif param_type.startswith("vector<"):  # Handle vector types
-                if not isinstance(arg, list):
-                    return {"error": f"Expected a list for `{param_type}` but got {type(arg).__name__}"}
-                # Use a single encoder for vectors rather than a list of encoders
-                serialized_args.append(TransactionArgument(value=arg, encoder=Serializer.str))
-            else:
-                serialized_args.append(TransactionArgument(value=arg, encoder=Serializer.str))
-||||||| ancestor
-        function_abi: None = None
-        if abi_cache is not None:
-            print(f"Using cached ABI for module: {module_address}::{module_name}")
-            for module in abi_cache:
-                if "abi" in module and isinstance(module["abi"], dict):
-                    abi: dict[Any, Any] = module["abi"]
-                    if "name" in abi and abi["name"] == module_name:
-                        if "exposed_functions" in abi and isinstance(abi["exposed_functions"], list):
-                            for func in abi["exposed_functions"]:
-                                if "name" in func and func["name"] == function_name:
-                                    function_abi: Any | None = func
-                                    break
-
-        # ✅ Step 2: If ABI is not cached, decide whether to fetch
-        if not function_abi and optional_fetch_abi:
-            print(f"Fetching ABI for module: {module_address}::{module_name}")
-            abi_data: dict[str, Any] = await get_account_modules(address=module_address)
-
-            if "modules" in abi_data and isinstance(abi_data["modules"], list):
-                # Cache ABI for future calls
-                module_list: list[Any] = abi_data["modules"]
-                
-                # Find function in the new ABI data
-                for module in module_list:
-                    if "abi" in module and isinstance(module["abi"], dict):
-                        abi: dict[Any, Any] = module["abi"]
-                        if "name" in abi and abi["name"] == module_name:
-                            if "exposed_functions" in abi and isinstance(abi["exposed_functions"], list):
-                                for func in abi["exposed_functions"]:
-                                    if "name" in func and func["name"] == function_name:
-                                        function_abi: Any | None = func
-                                        break
-
-        # If we still don't have function ABI, return an error
-        if not function_abi:
-            return {"error": f"Function `{function_id}` not found in ABI"}
-
-        # ✅ Step 3: Extract generic type parameters (if required)
-        expected_type_args: list[str] = []
+        expected_type_args = []
         if isinstance(function_abi, dict) and "generic_type_params" in function_abi:
             if "generic_type_params" in function_abi:
-                params: list[Any] = function_abi["generic_type_params"]
+                params = function_abi["generic_type_params"]
                 if isinstance(params, list):
-                    expected_type_args: list[str] = params
+                    expected_type_args = params
             
         if expected_type_args and not type_args:
             return {"error": f"Missing required type arguments for `{function_id}`"}
@@ -396,19 +299,19 @@ async def execute_entry_function(
         print(f"Provided Type Arguments: {type_args}")
 
         # ✅ Step 4: Extract required parameters from ABI
-        expected_params: list[str] = []
+        expected_params = []
         if isinstance(function_abi, dict) and "params" in function_abi:
             if "params" in function_abi:
-                params: Any | list[Any] = function_abi["params"]
+                params = function_abi["params"]
                 if isinstance(params, list):
-                    expected_params: list[str] = params
+                    expected_params = params
             
         print(f"Expected Parameters: {expected_params}")
         print(f"Args: {args}")
 
         # Ensure the signer (`&signer`) is NOT passed in `args`
         if expected_params and len(expected_params) > 0 and expected_params[0] == "&signer":
-            expected_params: list[str] = expected_params[1:]  # Remove signer from expected params
+            expected_params = expected_params[1:]  # Remove signer from expected params
             print("Automatically handling signer argument")
 
         # ✅ Step 5: Validate the number of arguments
@@ -416,12 +319,12 @@ async def execute_entry_function(
         #     return {"error": f"Argument mismatch: expected {len(expected_params)}, got {len(args)}"}
 
         # ✅ Step 6: Serialize arguments correctly based on ABI types
-        serialized_args: list[TransactionArgument] = []
+        serialized_args = []
         for i, arg in enumerate(args):
             # don't go above the expected parameters
             if i >= len(expected_params):
                 break
-            param_type: str = expected_params[i]
+            param_type = expected_params[i]
 
             if param_type == "u64":
                 serialized_args.append(TransactionArgument(value=int(arg), encoder=Serializer.u64))
@@ -436,46 +339,14 @@ async def execute_entry_function(
                 serialized_args.append(TransactionArgument(value=arg, encoder=Serializer.str))
             else:
                 serialized_args.append(TransactionArgument(value=arg, encoder=Serializer.str))
-=======
-        function_abi = get_function_abi(abi_cache, module_name, function_name)
-        
-        # ✅ Step 2: Extract expected type args and params from ABI
-        if function_abi is None:
-            return {"error": f"Function ABI not found for {function_id}"}
-        
-        # Extract expected type arguments
-        expected_type_args = get_expected_type_args(function_abi)
-        
-        # Check if we have the correct number of type arguments
-        if len(type_args) != len(expected_type_args):
-            return {"error": f"Expected {len(expected_type_args)} type arguments, but got {len(type_args)}"}
-        
-        # Extract expected parameters (excluding the signer)
-        expected_params = get_expected_params(function_abi) 
-        
-        # Check if we have the correct number of arguments (excluding the signer)
-        if len(args) != len(expected_params):
-            return {"error": f"Expected {len(expected_params)} arguments, but got {len(args)}"}
-        
-        # ✅ Step 5: Serialize arguments correctly based on ABI types
-        serialized_result = serialize_arguments(expected_params, args)
-        if isinstance(serialized_result, dict) and "error" in serialized_result:
-            return serialized_result
-        
-        # Perform a type check to ensure we have a list of TransactionArgument
-        if not isinstance(serialized_result, list):
-            return {"error": "Failed to serialize arguments"}
-        
-        serialized_args = serialized_result
->>>>>>> theirs
 
         print(f"Serialized Arguments: {serialized_args}")  # Debugging output
 
         # ✅ Step 7: Execute the function with the dynamically determined shape
         # Convert type_args to the expected TypeTag objects
-        converted_type_args: list[TypeTag] = [TypeTag(t) for t in type_args]
+        converted_type_args = [TypeTag(t) for t in type_args]
         
-        payload: EntryFunction = EntryFunction.natural(
+        payload = EntryFunction.natural(
             module_path,
             function_name,
             converted_type_args,  # Correctly determined type arguments
@@ -483,12 +354,12 @@ async def execute_entry_function(
         )
 
         # ✅ Create and sign the transaction correctly
-        signed_transaction: SignedTransaction = await rest_client.create_bcs_signed_transaction(
+        signed_transaction = await rest_client.create_bcs_signed_transaction(
             sender, payload=TransactionPayload(payload)
         )
 
         # ✅ Submit the transaction and return txn hash
-        txn_hash: str = await rest_client.submit_bcs_transaction(signed_transaction)
+        txn_hash = await rest_client.submit_bcs_transaction(signed_transaction)
         print(f"Transaction submitted successfully! Txn Hash: {txn_hash}")
         return {"txn_hash": txn_hash}
 
