@@ -270,12 +270,12 @@ async def execute_entry_function(
                 for module in module_list:
                     if "abi" in module and isinstance(module["abi"], dict):
                         abi: dict[Any, Any] = module["abi"]
-                        if "name" in abi and abi["name"] == module_name:
-                            if "exposed_functions" in abi and isinstance(abi["exposed_functions"], list):
-                                for func in abi["exposed_functions"]:
-                                    if "name" in func and func["name"] == function_name:
-                                        function_abi: Any | None = func
-                                        break
+                        if "name" in abi and abi["name"] == module_name and ("exposed_functions" in abi and isinstance(abi["exposed_functions"], list)):
+                            for func in abi["exposed_functions"]:
+                                if "name" in func and func["name"] == function_name:
+                                    function_abi: Any | None = func
+                                    break
+
 
         # If we still don't have function ABI, return an error
         if not function_abi:
