@@ -286,11 +286,11 @@ async def execute_entry_function(
 
         # ✅ Step 3: Extract generic type parameters (if required)
         expected_type_args = []
-        if isinstance(function_abi, dict) and "generic_type_params" in function_abi:
-            if "generic_type_params" in function_abi:
-                params = function_abi["generic_type_params"]
-                if isinstance(params, list):
-                    expected_type_args = params
+        if isinstance(function_abi, dict) and "generic_type_params" in function_abi and "generic_type_params" in function_abi:
+            params = function_abi["generic_type_params"]
+            if isinstance(params, list):
+                expected_type_args = params
+
             
         if expected_type_args and not type_args:
             return {"error": f"Missing required type arguments for `{function_id}`"}
